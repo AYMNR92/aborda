@@ -1,0 +1,101 @@
+// Base de données des compagnies aériennes (codes IATA)
+// Source: https://raw.githubusercontent.com/jpatokal/openflights/master/data/airlines.dat
+
+let AIRLINES_CACHE = null;
+
+// Charger la base de données depuis OpenFlights
+export const loadAirlinesDatabase = async () => {
+  if (AIRLINES_CACHE) {
+    return AIRLINES_CACHE;
+  }
+
+  try {
+    const response = await fetch(
+      'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airlines.dat'
+    );
+    const text = await response.text();
+    
+    // Parser le CSV
+    const lines = text.split('\n');
+    const airlines = {};
+    
+    lines.forEach(line => {
+      // Format: ID,Name,Alias,IATA,ICAO,Callsign,Country,Active
+      const parts = line.split(',');
+      
+      if (parts.length >= 7) {
+        const iata = parts[3].replace(/"/g, '').trim();
+        const name = parts[1].replace(/"/g, '').trim();
+        const country = parts[6].replace(/"/g, '').trim();
+        const active = parts[7]?.replace(/"/g, '').trim();
+        
+        // Seulement les compagnies avec un code IATA valide et actives
+        if (iata && iata.length === 2 && active === 'Y') {
+          airlines[iata] = {
+            name,
+            country,
+            brandColor: getBrandColor(iata),
+          };
+        }
+      }
+    });
+    
+    AIRLINES_CACHE = airlines;
+    console.log(`✅ ${Object.keys(airlines).length} compagnies aériennes chargées`);
+    return airlines;
+    
+  } catch (error) {
+    console.error('❌ Erreur chargement base compagnies:', error);
+    return getFallbackAirlines();
+  }
+};
+
+// Fallback si l'API ne marche pas
+
+const getFallbackAirlines = () => {
+  return {
+    'AF': { name: 'Air France', country: 'France', brandColor: '#002855' },
+    'BA': { name: 'British Airways', country: 'United Kingdom', brandColor: '#075AAA' },
+    'LH': { name: 'Lufthansa', country: 'Germany', brandColor: '#05164D' },
+    'KL': { name: 'KLM', country: 'Netherlands', brandColor: '#00A1DE' },
+    'IB': { name: 'Iberia', country: 'Spain', brandColor: '#EC1C24' },
+    'AZ': { name: 'ITA Airways', country: 'Italy', brandColor: '#009246' },
+    'TP': { name: 'TAP Portugal', country: 'Portugal', brandColor: '#DC004E' },
+    'SN': { name: 'Brussels Airlines', country: 'Belgium', brandColor: '#00488F' },
+    'LX': { name: 'Swiss', country: 'Switzerland', brandColor: '#E30613' },
+    'OS': { name: 'Austrian Airlines', country: 'Austria', brandColor: '#E40521' },
+    'SK': { name: 'SAS', country: 'Sweden', brandColor: '#000099' },
+    'AY': { name: 'Finnair', country: 'Finland', brandColor: '#00205B' },
+    'FR': { name: 'Ryanair', country: 'Ireland', brandColor: '#073590' },
+    'U2': { name: 'easyJet', country: 'United Kingdom', brandColor: '#FF6600' },
+    'VY': { name: 'Vueling', country: 'Spain', brandColor: '#FFD200' },
+    'W6': { name: 'Wizz Air', country: 'Hungary', brandColor: '#C4087E' },
+    'EK': { name: 'Emirates', country: 'United Arab Emirates', brandColor: '#D71921' },
+    'QR': { name: 'Qatar Airways', country: 'Qatar', brandColor: '#5C0931' },
+    'EY': { name: 'Etihad Airways', country: 'United Arab Emirates', brandColor: '#8B6F47' },
+    'TK': { name: 'Turkish Airlines', country: 'Turkey', brandColor: '#C70A0C' },
+    'AA': { name: 'American Airlines', country: 'United States', brandColor: '#0078D2' },
+    'UA': { name: 'United Airlines', country: 'United States', brandColor: '#0032A0' },
+    'DL': { name: 'Delta Air Lines', country: 'United States', brandColor: '#003A70' },
+    'AC': { name: 'Air Canada', country: 'Canada', brandColor: '#E21836' },
+    'NH': { name: 'ANA', country: 'Japan', brandColor: '#14559A' },
+    'JL': { name: 'Japan Airlines', country: 'Japan', brandColor: '#D60000' },
+    'SQ': { name: 'Singapore Airlines', country: 'Singapore', brandColor: '#003087' },
+    'CX': { name: 'Cathay Pacific', country: 'Hong Kong', brandColor: '#00664F' },
+    'QF': { name: 'Qantas', country: 'Australia', brandColor: '#E40000' },
+  };
+};
+
+// Fonction helper pour obtenir le nom d'une compagnie
+export const getAirlineName = async (iataCode) => {
+  const airlines = await loadAirlinesDatabase();
+  const airline = airlines[iataCode];
+  return airline ? airline.name : iataCode;
+};
+
+// Fonction pour obtenir le nom avec le pays
+export const getAirlineFullName = async (iataCode) => {
+  const airlines = await loadAirlinesDatabase();
+  const airline = airlines[iataCode];
+  return airline ? `${airline.name} (${airline.country})` : iataCode;
+};

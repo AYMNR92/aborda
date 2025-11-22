@@ -1,0 +1,664 @@
+import { useState } from 'react';
+import {
+  LayoutAnimation,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  UIManager,
+  View
+} from 'react-native';
+import { BoardingPassCard } from '../utils/BoardingPassCard.js';
+import { formatDistance } from '../utils/distanceCalculator.js';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+export const FlightsScreen = ({ boardingPasses }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBoardingPass, setSelectedBoardingPass] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [expandedCard, setExpandedCard] = useState(null);
+  
+  // Filtrer les vols selon la recherche
+  const filteredFlights = boardingPasses.filter((bp) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      bp.airline.toLowerCase().includes(query) ||
+      bp.flightNumber.toLowerCase().includes(query) ||
+      bp.origin.toLowerCase().includes(query) ||
+      bp.destination.toLowerCase().includes(query) ||
+      bp.passengerName.toLowerCase().includes(query)
+    );
+  });
+
+  const handleCardPress = (boardingPass) => {
+    setSelectedBoardingPass(boardingPass);
+    setShowDetailModal(true);
+  };
+
+  const toggleCardExpansion = (cardId) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedCard(expandedCard === cardId ? null : cardId);
+  };
+
+  const totalKm = boardingPasses.reduce((sum, bp) => sum + (bp.distanceKm || 0), 0);
+  const averageKm = boardingPasses.length > 0 ? Math.round(totalKm / boardingPasses.length) : 0;
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Mes Vols</Text>
+      </View>
+
+        <View style={styles.selectionCounter}>
+          <Text style={styles.counterText}>{formatDistance(totalKm)} km parcourus</Text>
+        </View>
+
+      {/* Liste des vols */}
+      <ScrollView style={styles.flightsList} showsVerticalScrollIndicator={false} contentContainerStyle={styles.stackContainer}>
+        {filteredFlights.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>
+              {searchQuery ? 'Aucun résultat' : 'Aucun vol pour l\'instant'}
+            </Text>
+            <Text style={styles.emptyStateSubtitle}>
+              {searchQuery
+                ? 'Essayez une autre recherche'
+                : 'Scannez votre première carte d\'embarquement'}
+            </Text>
+          </View>
+        ) : (
+              <View style={styles.cardsStack}>
+      {filteredFlights.map((bp, index) => {
+        const isExpanded = expandedCard === bp.id;
+        
+        // Calculer le décalage vertical - les cartes s'empilent vers le BAS
+        const stackOffset = index * (-50); // 80px de décalage par carte
+        const zIndex = filteredFlights.length - index; // Les premières cartes sont au-dessus
+        
+        return (
+          <View
+            key={bp.id}
+            style={[
+              styles.stackedCardContainer,
+              {
+                top: stackOffset,
+                zIndex: isExpanded ? 9999 : zIndex, // Carte expandée toujours au-dessus
+              }
+            ]}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => toggleCardExpansion(bp.id)}
+              onLongPress={() => handleCardPress(bp)}
+            >
+              <BoardingPassCard
+                boardingPass={bp}
+                onPress={() => handleCardPress(bp)}
+                style={isExpanded ? styles.expandedCard : null}
+              />
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+    </View>
+  )}
+</ScrollView>
+
+      {/* Modal de détail */}
+      <Modal
+        visible={showDetailModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDetailModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.modalClose}
+              onPress={() => setShowDetailModal(false)}
+            >
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+
+            {selectedBoardingPass && (
+              <>
+                <Text style={styles.modalTitle}>Détails du Vol</Text>
+
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalLabel}>Passager</Text>
+                  <Text style={styles.modalValue}>
+                    {selectedBoardingPass.passengerName}
+                  </Text>
+                </View>
+
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalLabel}>Compagnie & Vol</Text>
+                  <Text style={styles.modalValue}>
+                    {selectedBoardingPass.airline} {selectedBoardingPass.flightNumber}
+                  </Text>
+                </View>
+
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalLabel}>Trajet</Text>
+                  <Text style={styles.modalValue}>
+                    {selectedBoardingPass.origin} → {selectedBoardingPass.destination}
+                  </Text>
+                </View>
+
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalLabel}>Date de Vol</Text>
+                  <Text style={styles.modalValue}>{selectedBoardingPass.date}</Text>
+                </View>
+
+                <View style={styles.modalRow}>
+                  <View style={[styles.modalSection, { flex: 1 }]}>
+                    <Text style={styles.modalLabel}>Siège</Text>
+                    <Text style={styles.modalValue}>
+                      {selectedBoardingPass.seatNumber}
+                    </Text>
+                  </View>
+                  <View style={[styles.modalSection, { flex: 1 }]}>
+                    <Text style={styles.modalLabel}>Classe</Text>
+                    <Text style={styles.modalValue}>
+                      {selectedBoardingPass.travelClass}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalLabel}>Code de Réservation</Text>
+                  <Text style={styles.modalValue}>{selectedBoardingPass.pnr}</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => setShowDetailModal(false)}
+                >
+                  <Text style={styles.modalButtonText}>Fermer</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000000ff',
+     paddingTop: Platform.OS === 'ios' ? 0 : 0,  // Pas de padding, on gère dans header
+  },
+  header: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#BFDBFE',
+    marginTop: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: -15,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  clearButton: {
+    fontSize: 20,
+    color: '#9CA3AF',
+    padding: 4,
+  },
+  flightsList: {
+    marginTop: 10,
+    flex: 1,
+    paddingTop: 150,
+    paddingHorizontal: 16,
+  },
+  stackContainer: {
+    paddingTop: 20,
+    paddingBottom: 600, // Espace pour pouvoir scroller
+  },
+  cardsStack: {
+    position: 'relative',
+    minHeight: 800, // Hauteur minimale pour contenir toutes les cartes
+  },
+  stackedCardContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+  },
+  expandedCard: {
+    // Style pour la carte expandée (optionnel)
+    transform: [{ scale: 1.02 }],
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyStateIcon: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  // Modal styles (réutilisés de HomeScreen)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalClose: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 10,
+  },
+  modalCloseText: {
+    fontSize: 28,
+    color: '#6B7280',
+  },
+  modalTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalSection: {
+    marginBottom: 20,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 6,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  modalValue: {
+    fontSize: 18,
+    color: '#1F2937',
+    fontWeight: '600',
+  },
+  modalButton: {
+    backgroundColor: '#2563EB',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  selectionCounter: {
+
+    alignItems: 'center',
+  },
+  counterText: {
+    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+    color: '#E2E8F0',
+    fontSize: 13,
+    fontWeight: '600',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { WebView } from 'react-native-webview';
+import { loadAirportsDatabase } from '../utils/airportsDatabase.js';
+
+const { width, height } = Dimensions.get('window');
+
+export const MapScreen = ({ boardingPasses }) => {
+  const webViewRef = useRef(null);
+  const [points, setPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [arcs, setArcs] = useState([]);
+
+  // Extraire les destinations uniques
+  const allDestinations = [
+    ...boardingPasses.map((bp) => bp.origin),
+    ...boardingPasses.map((bp) => bp.destination),
+  ];
+  const uniqueDestinations = [...new Set(allDestinations)];
+
+  
+
+  // Compter les vols par destination
+  const destinationCounts = {};
+  allDestinations.forEach((dest) => {
+    destinationCounts[dest] = (destinationCounts[dest] || 0) + 1;
+  });
+
+  // Top 3 destinations
+  const topDestinations = Object.entries(destinationCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3);
+
+  // Charger les coordonnées depuis l'API
+  useEffect(() => {
+    const loadPoints = async () => {
+      setLoading(true);
+      const airports = await loadAirportsDatabase();
+      
+      const pointsData = uniqueDestinations
+        .filter(dest => airports[dest])
+        .map(dest => ({
+          lat: airports[dest].lat,
+          lng: airports[dest].lng,
+          size: 0.3,
+          color: '#22c55e',
+          label: `${dest} - ${airports[dest].city}`,
+        }));
+
+        const arcsData = boardingPasses
+                .map(bp => {
+                const origin = airports[bp.origin];
+                const destination = airports[bp.destination];
+                if (!origin || !destination) return null;
+
+                return {
+                startLat: origin.lat,
+                startLng: origin.lng,
+                endLat: destination.lat,
+                endLng: destination.lng,
+                color: ['#3b82f6', '#60a5fa'], // dégradé bleu
+                stroke: 1.5,
+                arcAltitude: 0.2
+                };
+                })
+                .filter(Boolean);
+
+      
+      setPoints(pointsData);
+      setArcs(arcsData);
+      setLoading(false);
+      console.log(`✅ ${pointsData.length} destinations chargées sur le globe`);
+    };
+
+    if (boardingPasses.length > 0) {
+      loadPoints();
+    } else {
+      setLoading(false);
+    }
+  }, [boardingPasses]);
+
+  // HTML avec globe.gl
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    body { margin: 0; overflow: hidden; background: #0F172A; }
+    #globeViz { width: 100vw; height: 100vh; }
+  </style>
+  <script src="https://unpkg.com/globe.gl"></script>
+</head>
+<body>
+  <div id="globeViz"></div>
+  <script>
+    const points = ${JSON.stringify(points)};
+    const arcs = ${JSON.stringify(arcs)};
+    
+    const globe = Globe()
+      (document.getElementById('globeViz'))
+      .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+      .pointsData(points)
+      .arcsData(arcs)
+      .arcColor(d => ['rgba(0, 255, 0, 0.3)', 'rgba(255, 0, 0, 0.3)'])
+      .arcStroke('stroke')
+      .arcAltitude('arcAltitude')
+      .arcDashLength(0.4)
+      .arcDashGap(0.2)
+
+      .arcDashAnimateTime(1500)
+      .pointAltitude(0.01)
+      .pointRadius('size')
+      .pointColor('color')
+      .pointLabel(d => d.label)
+      .atmosphereColor('#eef2f8ff')
+      .atmosphereAltitude(0.15);
+
+    // Auto-rotation
+//     globe.controls().autoRotate = false;
+//     globe.controls().autoRotateSpeed = 0.3;
+//     globe.controls().enableZoom = true;
+//     globe.controls().enablePan = false;
+//     globe.controls().minDistance = 150;
+//     globe.controls().maxDistance = 500;
+
+    // Responsive
+    window.addEventListener('resize', () => {
+      globe.width(window.innerWidth);
+      globe.height(window.innerHeight);
+    });
+  </script>
+</body>
+</html>
+  `;
+
+  return (
+    <View style={styles.container}>
+      
+
+      {/* Globe WebView */}
+      <View style={styles.globeContainer}>
+        {loading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color="#2563EB" />
+            <Text style={styles.loadingText}>Chargement des aéroports...</Text>
+          </View>
+        ) : (
+          <WebView
+            ref={webViewRef}
+            source={{ html: htmlContent }}
+            style={styles.webview}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.loading}>
+                <ActivityIndicator size="large" color="#2563EB" />
+                <Text style={styles.loadingText}>Chargement du globe...</Text>
+              </View>
+            )}
+          />
+        )}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    backgroundColor: '#2563EB',
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#BFDBFE',
+    marginTop: 4,
+  },
+  globeContainer: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    // justifyContent: 'center',  // ← Ajoute ça
+    // alignItems: 'center',
+  },
+  webview: {
+    flex: 1,
+    width: '100%', 
+    backgroundColor: 'transparent',
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    marginTop: 12,
+    fontSize: 14,
+  },
+  bottomSection: {
+    paddingVertical: 20,
+    paddingBottom: 100,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#1e293b',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 10,
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#334155',
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#2563EB',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 4,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+});
