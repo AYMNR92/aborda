@@ -7,14 +7,18 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { FlightsScreen } from './src/screens/FlightsScreen.js';
 import { MapScreen } from './src/screens/MapScreen.js';
 import { ScannerScreen } from './src/screens/ScannerScreen.js';
 import { getAirlineColors } from './src/utils/airlines.js';
 import { enrichBoardingPass } from './src/utils/enrichBoardingPass.js';
+import {
+  loadBoardingPassesFromStorage,
+  saveBoardingPassesToStorage
+} from './src/utils/storage.js';
 const Tab = createBottomTabNavigator();
 
 const Stack = createNativeStackNavigator();
@@ -28,11 +32,22 @@ export default function App() {
   });
 
   const [boardingPasses, setBoardingPasses] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const savedPasses = await loadBoardingPassesFromStorage();
+      if (savedPasses.length > 0) {
+        setBoardingPasses(savedPasses);
+        console.log("📂 Données récupérées du stockage local");
+      }
+    };
+    loadData();
+  }, []);
   
   if (!fontsLoaded) {
     return null; // Ou un loading screen
   }
-  
+
   const hashString = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -72,8 +87,11 @@ export default function App() {
       bgColor: color,
       index: newIndex,
     };
-
-    setBoardingPasses([...boardingPasses, newBoardingPass]);
+    const updatedList = [...boardingPasses, newBoardingPass];
+    setBoardingPasses(updatedList);
+    
+    await saveBoardingPassesToStorage(updatedList);
+    
     console.log('✅ Boarding pass ajoutée:', newBoardingPass);
   };
 
@@ -82,9 +100,9 @@ export default function App() {
         <Tab.Navigator
           screenOptions={{
             headerShown: false,
-            tabBarActiveTintColor: '#eb8825ff',
-            tabBarInactiveTintColor: '#000000ff',
-            tabBarShowLabel: true,
+            tabBarActiveTintColor: '#6050dc',
+            tabBarInactiveTintColor: '#ffffff56',
+            tabBarShowLabel: false,
             tabBarLabelStyle: styles.tabBarLabel,
             tabBarStyle: styles.tabBar,
             tabBarBackground: () => (
@@ -94,13 +112,12 @@ export default function App() {
                 style={styles.blurView}
               />
             ),
-          }}
+          }} 
         >
           {/* Onglet 1 : Vols */}
           <Tab.Screen
             name="Flights"
             options={{
-              tabBarLabel: 'Vols',
               tabBarIcon: ({ color, focused, size }) => (
                 <Ionicons
                   name={focused ? 'airplane' : 'airplane-outline'}
@@ -144,10 +161,9 @@ export default function App() {
           <Tab.Screen
             name="Map"
             options={{
-              tabBarLabel: 'Map',
               tabBarIcon: ({ color, focused, size }) => (
                 <Ionicons
-                  name={focused ? 'globe' : 'globe-outline'}
+                  name={focused ? 'planet' : 'planet-outline'}
                   size={24}
                   color={color}
                 />
@@ -162,7 +178,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
+      <StatusBar style={styles.tabBar} />
       <NavigationContainer>
          <Stack.Navigator screenOptions={{ headerShown: false }}>
 
@@ -191,35 +207,35 @@ export default function App() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    backgroundColor: '#0000001a',
+    backgroundColor: '#000000ff',
     borderTopWidth: 0,
-    height: Platform.OS === 'ios' ? 88 : 70,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-    paddingTop: 8,
+    height: 70,
+    paddingBottom: 30,
+    paddingTop: 5,
     elevation: 0,
   },
-  blurView: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  tabBarLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 9,
-  },
-  scannerIconContainer: {
-    backgroundColor: '#eb8825ff',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#eb8825ff',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
-    marginBottom:0,
-  },
+  // blurView: {
+  //   ...StyleSheet.absoluteFillObject,
+  //   overflow: 'hidden',
+  //   backgroundColor: 'rgba(255, 0, 0, 0.1)',
+  // },
+  // tabBarLabel: {
+  //   fontSize: 11,
+  //   fontWeight: '600',
+  //   marginTop: 9,
+  // },
+  // scannerIconContainer: {
+  //   backgroundColor: '#eb8825ff',
+  //   width: 40,
+  //   height: 40,
+  //   borderRadius: 20,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   shadowColor: '#eb8825ff',
+  //   shadowOffset: { width: 0, height: 4 },
+  //   shadowOpacity: 0.4,
+  //   shadowRadius: 12,
+  //   elevation: 10,
+  //   marginBottom:0,
+  // },
 });

@@ -200,11 +200,6 @@
 // //         )}
 
 
-
-
-
-
-
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
@@ -214,7 +209,6 @@ import {
   GestureDetector
 } from 'react-native-gesture-handler';
 import {
-  cancelAnimation,
   clamp,
   configureReanimatedLogger,
   useSharedValue,
@@ -223,10 +217,6 @@ import {
 } from 'react-native-reanimated';
 import { BoardingPassCard } from '../utils/BoardingPassCard.js';
 import { formatDistance } from '../utils/distanceCalculator.js';
-// // Active les animations sur Android
-// if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-//   UIManager.setLayoutAnimationEnabledExperimental(true);
-// }
 
 configureReanimatedLogger({
   strict: false, // Reanimated runs in strict mode by default
@@ -238,29 +228,37 @@ export const FlightsScreen = ({ boardingPasses }) => {
 
   const navigation = useNavigation();
 
-  const activeCardIndex = useSharedValue(null); // Index de la carte active (-1 si aucune)
+  const activeCardIndex = useSharedValue(0); // Index de la carte active (-1 si aucune)
   const totalKm = boardingPasses.reduce((sum, bp) => sum + (bp.distanceKm || 0), 0);
   const scrollY = useSharedValue(0); // Position du scroll vertical
   const maxScrollY = (boardingPasses.length-1) * 350; // Ajuste selon la hauteur des cartes et de l'écran
 
   const pan = Gesture.Pan()
     .onBegin(() => {
-      cancelAnimation(scrollY);
+    console.log("begin : " + activeCardIndex.value);
+      if (activeCardIndex.value !== null) return;
+      //cancelAnimation(scrollY);
     })
     .onStart(() => {
+       console.log("change : " + activeCardIndex.value);
+      if (activeCardIndex.value !== null) return;
       console.log("paquet");
     })
     .onChange((event) => {
-      scrollY.value = clamp(scrollY.value - event.changeY, 0, maxScrollY);
+      if (activeCardIndex.value !== null) return;
+      if (activeCardIndex.value === null) scrollY.value = clamp(scrollY.value - event.changeY, 0, maxScrollY);
     })
     .onEnd((event) => {
-      scrollY.value = withClamp(
-        {min: 0, max: maxScrollY},
-        withDecay({
-          velocity: -(event.velocityY *1.5),
-          deceleration: 0.998,
-        }),
-      );
+      if (activeCardIndex.value !== null) return;
+      if (activeCardIndex.value === null) {
+        scrollY.value = withClamp(
+          {min: 0, max: maxScrollY},
+          withDecay({
+            velocity: -(event.velocityY *1.5),
+            deceleration: 0.998,
+          }),
+        );
+      }
     });
 
   return (
@@ -270,7 +268,7 @@ export const FlightsScreen = ({ boardingPasses }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Vols</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Scanner')}>
-          <Ionicons name="scan-outline" size={30} color="#fff" />
+          <Ionicons name="scan-outline" size={30} color="#6050dc" />
         </TouchableOpacity>
       </View>
       {/* Counter */}
