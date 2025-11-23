@@ -199,308 +199,16 @@
 // //           </Animated.ScrollView>
 // //         )}
 
-// //         {/* Modal détails (long press) */}
-// //         <Modal 
-// //           visible={showDetailModal} 
-// //           transparent 
-// //           animationType="slide" 
-// //           onRequestClose={() => setShowDetailModal(false)}
-// //         >
-// //           <View style={styles.modalBackdrop}>
-// //             <View style={styles.modalCard}>
-// //               <Text style={styles.modalTitle}>{selectedBoardingPass?.flightNumber || ''}</Text>
-// //               <Text style={styles.modalSubtitle}>{selectedBoardingPass?.passengerName || ''}</Text>
 
-// //               <TouchableOpacity
-// //                 style={styles.modalCloseBtn}
-// //                 onPress={() => setShowDetailModal(false)}
-// //               >
-// //                 <Text style={styles.modalCloseText}>Fermer</Text>
-// //               </TouchableOpacity>
-// //             </View>
-// //           </View>
-// //         </Modal>
 
-// //       </View>
-// //     </GestureHandlerRootView>
-// //   );
-// // };
 
-// // const styles = StyleSheet.create({
-// //   container: {
-// //     flex: 1,
-// //     backgroundColor: '#F5F7FA',
-// //   },
-// //   header: {
-// //     backgroundColor: '#2563EB',
-// //     padding: 20,
-// //     paddingTop: Platform.OS === 'ios' ? 60 : 40,
-// //     paddingBottom: 20,
-// //   },
-// //   headerTitle: {
-// //     fontSize: 32,
-// //     fontWeight: 'bold',
-// //     color: '#FFFFFF',
-// //   },
-// //   selectionCounter: {
-// //     backgroundColor: '#FFFFFF',
-// //     marginHorizontal: 16,
-// //     marginTop: -10,
-// //     marginBottom: 20,
-// //     paddingVertical: 12,
-// //     borderRadius: 12,
-// //     alignItems: 'center',
-// //     shadowColor: '#000',
-// //     shadowOffset: { width: 0, height: 2 },
-// //     shadowOpacity: 0.1,
-// //     shadowRadius: 4,
-// //     elevation: 3,
-// //   },
-// //   counterText: {
-// //     fontSize: 16,
-// //     fontWeight: '700',
-// //     color: '#2563EB',
-// //   },
-// //   scrollContent: {
-// //     flexGrow: 1,
-// //   },
-// //   stackContainer: {
-// //     position: 'relative',
-// //     paddingHorizontal: CARD_MARGIN,
-// //     minHeight: 600, // Hauteur minimale pour contenir les cartes empilées
-// //   },
-// //   cardWrapper: {
-// //     position: 'absolute',
-// //     left: CARD_MARGIN,
-// //     right: CARD_MARGIN,
-// //     top: 0,
-// //   },
-// //   expandedCardContainer: {
-// //     transform: [{ scale: 1.02 }],
-// //   },
-// //   expandedCard: {
-// //     shadowColor: '#000',
-// //     shadowOffset: { width: 0, height: 8 },
-// //     shadowOpacity: 0.3,
-// //     shadowRadius: 12,
-// //     elevation: 12,
-// //   },
-// //   emptyState: {
-// //     flex: 1,
-// //     alignItems: 'center',
-// //     justifyContent: 'center',
-// //     paddingVertical: 80,
-// //   },
-// //   emptyStateTitle: {
-// //     fontSize: 22,
-// //     fontWeight: '700',
-// //     color: '#1F2937',
-// //     marginBottom: 8,
-// //   },
-// //   emptyStateSubtitle: {
-// //     fontSize: 15,
-// //     color: '#6B7280',
-// //     textAlign: 'center',
-// //   },
-  
-// //   // Modal styles
-// //   modalBackdrop: {
-// //     flex: 1,
-// //     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-// //     justifyContent: 'center',
-// //     alignItems: 'center',
-// //     padding: 20,
-// //   },
-// //   modalCard: {
-// //     backgroundColor: '#FFFFFF',
-// //     borderRadius: 24,
-// //     padding: 32,
-// //     width: '90%',
-// //     maxWidth: 400,
-// //   },
-// //   modalTitle: {
-// //     fontSize: 26,
-// //     fontWeight: 'bold',
-// //     color: '#1F2937',
-// //     marginBottom: 8,
-// //     textAlign: 'center',
-// //   },
-// //   modalSubtitle: {
-// //     fontSize: 18,
-// //     color: '#6B7280',
-// //     marginBottom: 24,
-// //     textAlign: 'center',
-// //   },
-// //   modalCloseBtn: {
-// //     backgroundColor: '#2563EB',
-// //     padding: 16,
-// //     borderRadius: 12,
-// //     alignItems: 'center',
-// //   },
-// //   modalCloseText: {
-// //     color: '#FFFFFF',
-// //     fontSize: 17,
-// //     fontWeight: '700',
-// //   },
-// // });
 
-// import { useState } from 'react';
-// import { Dimensions, StyleSheet, Text, View } from 'react-native';
-// import Animated, {
-//   interpolate,
-//   useAnimatedScrollHandler,
-//   useAnimatedStyle,
-//   useSharedValue
-// } from 'react-native-reanimated';
-// import { BoardingPassCard } from '../utils/BoardingPassCard.js';
 
-// const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// // CONFIGURATION DE L'APPARENCE
-// const CARD_HEIGHT = 220; // Hauteur totale de ta carte
-// const VISIBLE_HEIGHT = 80; // Ce qu'on voit de la carte quand elle est recouverte (le haut)
-
-// const AnimatedFlightCard = ({ item, index, scrollY, onPress }) => {
-//   // La position Y théorique de la carte dans la liste
-//   const positionY = index * VISIBLE_HEIGHT;
-
-//   const animatedStyle = useAnimatedStyle(() => {
-//     // STICKY EFFECT :
-//     // Si on a scrollé plus bas que la position de la carte, on la force à rester en haut (y=0 relatif à l'écran)
-//     // Le scrollY.value représente combien on a descendu dans la liste.
-    
-//     const isSticking = scrollY.value > positionY;
-    
-//     const translateY = isSticking
-//       ? scrollY.value - positionY // On annule le scroll pour qu'elle reste fixe
-//       : 0;
-
-//     // SCALE EFFECT (Optionnel) :
-//     // Pour donner l'impression qu'elle part un peu au fond quand elle est recouverte
-//     const scale = interpolate(
-//       scrollY.value,
-//       [positionY, positionY + VISIBLE_HEIGHT], // Pendant que la suivante passe dessus
-//       [1, 0.94], // Elle réduit légèrement
-//       { extrapolateRight: 'clamp' }
-//     );
-
-//     // OPACITÉ (Optionnel) : 
-//     // Assombrir un peu la carte quand elle est sticky pour le focus sur la nouvelle
-//     const opacity = interpolate(
-//         scrollY.value,
-//         [positionY, positionY + 300],
-//         [1, 0.6], // Devient un peu transparente si elle est très loin haut
-//         { extrapolateRight: 'clamp' }
-//     );
-
-//     return {
-//       transform: [
-//         { translateY }, 
-//         { scale }
-//       ],
-//       // Z-INDEX :
-//       // Plus l'index est grand, plus c'est au dessus. C'est le comportement par défaut,
-//       // mais on le force ici pour être sûr.
-//       zIndex: index, 
-//       opacity: isSticking ? opacity : 1,
-//     };
-//   });
-
-//   return (
-//     <Animated.View style={[styles.cardWrapper, animatedStyle]}>
-//       <BoardingPassCard 
-//         boardingPass={item} 
-//         onPress={onPress}
-//       />
-//     </Animated.View>
-//   );
-// };
-
-// export const FlightsScreen = ({ boardingPasses }) => {
-//   const [selectedBoardingPass, setSelectedBoardingPass] = useState(null);
-//   const [showDetailModal, setShowDetailModal] = useState(false);
-
-//   const scrollY = useSharedValue(0);
-
-//   const scrollHandler = useAnimatedScrollHandler((event) => {
-//     scrollY.value = event.contentOffset.y;
-//   });
-
-//   const handleCardPress = (boardingPass) => {
-//     setSelectedBoardingPass(boardingPass);
-//     setShowDetailModal(true);
-//   };
-
-//   // Ton header existant (simplifié pour l'exemple)
-//   const ListHeader = () => (
-//     <View style={styles.headerContainer}>
-//         <Text style={styles.headerTitle}>Mes Vols</Text>
-//         <Text style={styles.subTitle}>{boardingPasses.length} billets</Text>
-//     </View>
-//   );
-
-//   return (
-//     <View style={styles.container}>
-//       <Animated.FlatList
-//         data={boardingPasses}
-//         keyExtractor={(item) => item.id}
-//         onScroll={scrollHandler}
-//         scrollEventThrottle={16}
-//         ListHeaderComponent={ListHeader}
-//         // Marge en bas pour pouvoir scroller jusqu'à la dernière carte entièrement
-//         contentContainerStyle={{ paddingBottom: SCREEN_HEIGHT / 2 }}
-//         showsVerticalScrollIndicator={false}
-//         renderItem={({ item, index }) => (
-//           <AnimatedFlightCard 
-//             item={item} 
-//             index={index} 
-//             scrollY={scrollY}
-//             onPress={() => handleCardPress(item)}
-//           />
-//         )}
-//       />
-
-//      {/* Ton modal reste inchangé */}
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F2F2F7',
-//   },
-//   headerContainer: {
-//     paddingTop: 60,
-//     paddingBottom: 20,
-//     paddingHorizontal: 20,
-//     zIndex: 100, // Le header doit être au dessus de tout
-//     backgroundColor: '#F2F2F7',
-//   },
-//   headerTitle: {
-//     fontSize: 34,
-//     fontWeight: 'bold',
-//     color: '#000',
-//   },
-//   subTitle: {
-//     fontSize: 16,
-//     color: 'gray',
-//     marginTop: 5
-//   },
-//   cardWrapper: {
-//     height: CARD_HEIGHT, // La vue fait la taille totale de la carte
-//     marginBottom: -(CARD_HEIGHT - VISIBLE_HEIGHT), // C'EST ICI QUE LA MAGIE OPÈRE
-//     // Ex: Si carte = 220 et visible = 80. MarginBottom = -140.
-//     // La carte suivante commencera donc 140px "dans" celle-ci, ne laissant dépasser que les 80px du haut.
-    
-//     justifyContent: 'flex-start',
-//     alignItems: 'center',
-//     // Pas de background ici, c'est la carte qui l'a
-//   },
-// });
-
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import {
   Gesture,
   GestureDetector
@@ -514,6 +222,7 @@ import {
   withDecay
 } from 'react-native-reanimated';
 import { BoardingPassCard } from '../utils/BoardingPassCard.js';
+import { formatDistance } from '../utils/distanceCalculator.js';
 // // Active les animations sur Android
 // if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
 //   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -527,8 +236,10 @@ export const FlightsScreen = ({ boardingPasses }) => {
   const [listHeight, setListHeight] = useState(0);
   const { height: screenHeight } = useWindowDimensions();
 
-  const activeCardIndex = useSharedValue(null); // Index de la carte active (-1 si aucune)
+  const navigation = useNavigation();
 
+  const activeCardIndex = useSharedValue(null); // Index de la carte active (-1 si aucune)
+  const totalKm = boardingPasses.reduce((sum, bp) => sum + (bp.distanceKm || 0), 0);
   const scrollY = useSharedValue(0); // Position du scroll vertical
   const maxScrollY = (boardingPasses.length-1) * 350; // Ajuste selon la hauteur des cartes et de l'écran
 
@@ -558,7 +269,13 @@ export const FlightsScreen = ({ boardingPasses }) => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Vols</Text>
-        
+        <TouchableOpacity onPress={() => navigation.navigate('Scanner')}>
+          <Ionicons name="scan-outline" size={30} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      {/* Counter */}
+      <View style={styles.selectionCounter}>
+           <Text style={styles.counterText}>{formatDistance(totalKm)} km parcourus</Text>
       </View>
       <GestureDetector gesture={pan}>
       {/* Liste des vols empilés */}
@@ -589,14 +306,27 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#000000',
-    padding: 20,
+    marginHorizontal :20,
+    marginBottom : 0, 
     paddingTop: 60,
-    paddingBottom: 10,
+
+    flexDirection : 'row',
+    justifyContent : 'space-between',
+    alignItems : 'center',
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  headerScanIcon : {
+    fontWeight: 'bold',
+    color: '#ffffffff',
+
+    backgroundColor: '#eb8825ff',
+    fontSize: 32,
+    borderRadius: 20,
+    paddingRight : 5,
   },
   headerSubtitle: {
     fontSize: 14,
@@ -656,4 +386,22 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
+    selectionCounter: {
+      position: 'static',
+      top:65,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      paddingBottom : 10, 
+    },
+    counterText: {
+      backgroundColor: 'rgba(30, 41, 59, 0.9)',
+      color: '#E2E8F0',
+      fontSize: 13,
+      fontWeight: '600',
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      overflow: 'hidden',
+    },
 });

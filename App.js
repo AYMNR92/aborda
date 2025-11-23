@@ -4,10 +4,11 @@ import { Inter_400Regular, Inter_500Medium, Inter_700Bold, Inter_900Black, useFo
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { FlightsScreen } from './src/screens/FlightsScreen.js';
 import { MapScreen } from './src/screens/MapScreen.js';
@@ -15,6 +16,8 @@ import { ScannerScreen } from './src/screens/ScannerScreen.js';
 import { getAirlineColors } from './src/utils/airlines.js';
 import { enrichBoardingPass } from './src/utils/enrichBoardingPass.js';
 const Tab = createBottomTabNavigator();
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
     let [fontsLoaded] = useFonts({
@@ -74,10 +77,8 @@ export default function App() {
     console.log('✅ Boarding pass ajoutée:', newBoardingPass);
   };
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
-      <NavigationContainer>
+  function MainTabs() {
+      return (
         <Tab.Navigator
           screenOptions={{
             headerShown: false,
@@ -113,7 +114,7 @@ export default function App() {
           </Tab.Screen>
 
           {/* Onglet 2 : Scanner */}
-          <Tab.Screen
+          {/* <Tab.Screen
             name="Scanner"
             options={{
               tabBarLabel: 'Scanner',
@@ -137,7 +138,7 @@ export default function App() {
                 onClose={() => navigation.navigate('Flights')}
               />
             )}
-          </Tab.Screen>
+          </Tab.Screen> */}
 
           {/* Onglet 3 : Map */}
           <Tab.Screen
@@ -156,6 +157,32 @@ export default function App() {
             {() => <MapScreen boardingPasses={boardingPasses} />}
           </Tab.Screen>
         </Tab.Navigator>
+      )
+  }
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style="light" />
+      <NavigationContainer>
+         <Stack.Navigator screenOptions={{ headerShown: false }}>
+
+          {/* Ta TabBar */}
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+
+          {/* Scanner hors TabBar */}
+          <Stack.Screen name="Scanner">
+            {({ navigation }) => (
+              <ScannerScreen
+                onScanSuccess={(parsedBCBP) => {
+                  handleScanSuccess(parsedBCBP);
+                  navigation.navigate('MainTabs', { screen: 'Flights' }); // ou MainTabs si besoin
+                }}
+                onClose={() => navigation.goBack()}
+              />
+            )}
+          </Stack.Screen>
+
+        </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
   );

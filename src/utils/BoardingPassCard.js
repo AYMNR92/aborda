@@ -66,13 +66,13 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
 
       if(activeCardIndex.value === null) {
         translateY.value = withTiming(
-          clamp(-scrollY.value,-index * cardHeight,0)
+          clamp(-scrollY.value,-index * cardHeight ,0)
         );
       } 
       //si c'est cette carte qui devient active -> la monter en haut
       else if (activeCardIndex.value === index) {
         translateY.value = withTiming(-index * cardHeight, 
-        { easing: Easing.out(Easing.quad), duration: 1000 });
+        { easing: Easing.out(Easing.quad), duration: 400 });
       } 
       //si une autre carte devient active -> la descendre un peu
       else {
