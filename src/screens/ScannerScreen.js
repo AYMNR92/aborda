@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState } from 'react';
 import {
@@ -15,6 +16,8 @@ export const ScannerScreen = ({ onScanSuccess, onClose }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [showDevPanel, setShowDevPanel] = useState(__DEV__);
+
+  const [torchEnabled, setTorchEnabled] = useState(false);
 
   // Gestion du scan réel (caméra)
   const handleBarCodeScanned = ({ type, data }) => {
@@ -127,6 +130,7 @@ export const ScannerScreen = ({ onScanSuccess, onClose }) => {
         <CameraView
           style={StyleSheet.absoluteFillObject}
           facing="back"
+          enableTorch={torchEnabled}
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
             barcodeTypes: ['qr', 'pdf417', 'aztec'],
@@ -150,6 +154,16 @@ export const ScannerScreen = ({ onScanSuccess, onClose }) => {
             <Text style={styles.instruction}>
               Placez le code-barres dans le cadre
             </Text>
+            <TouchableOpacity 
+          onPress={() => setTorchEnabled(!torchEnabled)} 
+          style={styles.flashButton}
+        >
+          <Ionicons 
+            name={torchEnabled ? "flash" : "flash-off"} 
+            size={24} 
+            color={torchEnabled ? "#FCD34D" : "#FFFFFF"} 
+          />
+        </TouchableOpacity>
             {__DEV__ && (
               <TouchableOpacity
                 style={styles.devButton}
