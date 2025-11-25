@@ -1,0 +1,39 @@
+🚀 Patch Notes - Aborda v0.5 (Update "Cloud & Social")
+🔐 Authentification & Comptes Utilisateurs
+Système de Connexion/Inscription : Intégration complète de Supabase Auth.
+
+Sécurisation des Données : Chaque utilisateur a sa session
+
+Session Persistante : L'utilisateur reste connecté même après redémarrage de l'application
+
+🛂 Nouvel Onglet : Profil (appelé Passeport)
+
+Carte d'Identité Virtuelle : Affichage stylisé du "Traveler ID" avec le pseudo de l'utilisateur.
+
+Statistiques en Temps Réel : Connexion au backend pour afficher :
+
+🌍 Nombre de pays visités.
+
+✈️ Nombre de vols total.
+
+📏 Distance totale parcourue (calculée précisément par le serveur).
+
+Collection de Tampons : Génération dynamique des "Visas/Stamps" basés sur l'historique des vols.
+
+☁️ Backend & Infrastructure (Node.js + Supabase)
+Création de l'API REST : Serveur Express.js opérationnel.
+
+Base de Données Relationnelle :
+
+Tables flights, users, airports, airlines créées et reliées.
+
+Script de "Seed" pour importer +7000 aéroports et compagnies aériennes.
+
+Calcul automatique de la distance (Haversine) lors de l'ajout d'un vol.
+
+Middleware de sécurité (requireAuth) pour vérifier les Tokens JWT.
+
+📸 Scanner & Outils
+Mode Flash 🔦 : Ajout d'un bouton pour activer/désactiver la torche pendant le scan.
+
+Liaison API : Le scanner n'enregistre plus en local, mais envoie les données au serveur pour traitement et sauvegarde sécurisée.

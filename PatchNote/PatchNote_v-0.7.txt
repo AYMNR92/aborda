@@ -1,0 +1,43 @@
+🛠️ Patch Notes - Aborda v0.7 (Update "Stabilité & UX")
+Cette mise à jour se concentre sur la correction des bugs critiques liés au cycle de vie des données (ajout/suppression) et l'amélioration de l'expérience utilisateur lors de la gestion des billets.
+
+🐛 Corrections de Bugs Critiques (Fixes)
+Correction du "Multi-Scan" (Effet Mitraillette) :
+
+Ajout d'un verrou côté Frontend (useRef) pour empêcher l'envoi de requêtes simultanées lors du scan.
+
+Ajout d'une contrainte d'unicité SQL (UNIQUE) sur le couple User + Flight Number + Date pour empêcher physiquement les doublons en base de données.
+
+Gestion silencieuse de l'erreur "Doublon" pour ne pas effrayer l'utilisateur.
+
+Correction du Double-Fetch au démarrage :
+
+Mise en place d'un verrou (hasFetchedRef) dans le useEffect principal pour empêcher React Strict Mode de télécharger la liste des vols deux fois de suite.
+
+Correction des erreurs de portée ("Scope") :
+
+Déplacement de la fonction syncFlightsFromServer au niveau racine du composant AppContent pour qu'elle soit accessible par handleScanSuccess et handleDeleteFlight.
+
+Réparation de la Suppression :
+
+Correction de l'erreur ReferenceError sur deleteFlightFromBackend (import manquant).
+
+La liste se rafraîchit désormais correctement après une suppression.
+
+🎨 Améliorations UI/UX (Interface)
+Bouton de Suppression Intelligent :
+
+Le bouton "Supprimer" n'apparaît que lorsque la carte est active (ouverte).
+
+Positionnement en Absolute sous la carte pour ne pas perturber l'alignement visuel de la pile (Stack).
+
+Animation d'opacité (Fade In/Out) liée à l'ouverture de la carte.
+
+Sécurité Action : Ajout d'une alerte de confirmation native ("Êtes-vous sûr ?") avant la suppression définitive.
+
+🏗️ Architecture & Backend
+Nettoyage de Code (Refactor) :
+
+Centralisation de la logique de synchronisation : handleScanSuccess ne gère plus l'état local manuellement mais demande une synchronisation serveur complète (Source unique de vérité).
+
+Tri des vols par date de départ (Option chronologique activée par défaut).
