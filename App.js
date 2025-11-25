@@ -28,6 +28,56 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+function MainTabs({ boardingPasses, onDelete }) {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#6050dc',
+        tabBarInactiveTintColor: '#ffffff56',
+        tabBarShowLabel: false,
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarStyle: styles.tabBar,
+        tabBarBackground: () => (
+          <BlurView intensity={95} tint="extraLight" style={styles.blurView} />
+        ),
+      }} 
+    >
+      <Tab.Screen
+        name="Flights"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'airplane' : 'airplane-outline'} size={24} color={color} />
+          ),
+        }}
+      >
+        {() => <FlightsScreen boardingPasses={boardingPasses} onDelete={onDelete}/>}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Map"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'planet' : 'planet-outline'} size={24} color={color} />
+          ),
+        }}
+      >
+        {() => <MapScreen boardingPasses={boardingPasses} />}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Passport"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'id-card' : 'id-card-outline'} size={24} color={color} />
+          ),
+        }}
+        component={PassportScreen}
+      />
+    </Tab.Navigator>
+  );
+}
+
 function AppContent() {
   const { user, loading } = useAuth();
   const [boardingPasses, setBoardingPasses] = useState([]);
@@ -181,58 +231,6 @@ function AppContent() {
     );
   };
 
-  // ... (Reste du code identique : MainTabs, etc.) ...
-  
-  function MainTabs() {
-    return (
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: '#6050dc',
-          tabBarInactiveTintColor: '#ffffff56',
-          tabBarShowLabel: false,
-          tabBarLabelStyle: styles.tabBarLabel,
-          tabBarStyle: styles.tabBar,
-          tabBarBackground: () => (
-            <BlurView intensity={95} tint="extraLight" style={styles.blurView} />
-          ),
-        }} 
-      >
-        <Tab.Screen
-          name="Flights"
-          options={{
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'airplane' : 'airplane-outline'} size={24} color={color} />
-            ),
-          }}
-        >
-          {() => <FlightsScreen boardingPasses={boardingPasses} onDelete={handleDeleteFlight}/>}
-        </Tab.Screen>
-
-        <Tab.Screen
-          name="Map"
-          options={{
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'planet' : 'planet-outline'} size={24} color={color} />
-            ),
-          }}
-        >
-          {() => <MapScreen boardingPasses={boardingPasses} />}
-        </Tab.Screen>
-
-        <Tab.Screen
-          name="Passport"
-          options={{
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'id-card' : 'id-card-outline'} size={24} color={color} />
-            ),
-          }}
-          component={PassportScreen}
-        />
-      </Tab.Navigator>
-    );
-  }
-
   if (loading) {
     return (
       <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#000'}}>
@@ -245,7 +243,15 @@ function AppContent() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {user ? (
         <>
-          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="MainTabs">
+            {(props) => (
+              <MainTabs 
+                {...props} 
+                boardingPasses={boardingPasses} 
+                onDelete={handleDeleteFlight} 
+              />
+            )}
+          </Stack.Screen>
           <Stack.Screen name="Scanner">
             {({ navigation }) => (
               <ScannerScreen

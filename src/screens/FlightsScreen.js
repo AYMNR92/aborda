@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import {
   Gesture,
@@ -10,9 +10,11 @@ import {
   cancelAnimation,
   clamp,
   configureReanimatedLogger,
+  Easing,
   useSharedValue,
   withClamp,
-  withDecay
+  withDecay,
+  withTiming
 } from 'react-native-reanimated';
 import { BoardingPassCard } from '../components/BoardingPassCard.js';
 import { formatDistance } from '../utils/formatters.js';
@@ -21,16 +23,18 @@ configureReanimatedLogger({
   strict: false, // Reanimated runs in strict mode by default
 });
 
-export const FlightsScreen = ({ boardingPasses, onDelete }) => {
+export const FlightsScreen = ({ boardingPasses = [], onDelete }) => {
   const [listHeight, setListHeight] = useState(0);
   const { height: screenHeight } = useWindowDimensions();
 
   const navigation = useNavigation();
 
   const activeCardIndex = useSharedValue(null); // Index de la carte active (null si aucune)
-  const totalKm = boardingPasses.reduce((sum, bp) => sum + (bp.distanceKm || 0), 0);
+  const totalKm = (boardingPasses || []).reduce((sum, bp) => sum + (bp.distanceKm || 0), 0);
   const scrollY = useSharedValue(0); // Position du scroll vertical
-  const maxScrollY = Math.max(0, (boardingPasses.length - 1) * 255); // Ajuste selon la hauteur des cartes
+  const maxScrollY = Math.max(0, ((boardingPasses || []).length - 1) * 255); // Ajuste selon la hauteur des cartes
+
+  const prevLengthRef = useRef((boardingPasses || []).length);
 
   const pan = Gesture.Pan()
     .minPointers(1)
@@ -59,6 +63,27 @@ export const FlightsScreen = ({ boardingPasses, onDelete }) => {
       );
     });
 
+  useEffect(() => {
+    // Si on a ajouté des éléments (longueur actuelle > longueur précédente)
+    if ((boardingPasses || []).length > prevLengthRef.current) {
+      // On attend un tout petit peu (300ms) que le rendu visuel et le calcul de hauteur (onLayout) soient finis
+        // Calcul de la position cible (tout en bas)
+        // On prend la hauteur totale de la liste - la hauteur de l'écran + une marge (ex: 200px)
+        
+      const targetY = ((boardingPasses || []).length - 2) * 255 +200;
+      setTimeout(() => {
+        // Animation fluide vers le bas
+        scrollY.value = withTiming(targetY, {
+          duration: 800, // Durée en ms (0.8s)
+          easing: Easing.out(Easing.cubic), // Effet de ralentissement à la fin
+        });
+      }, 50);
+    }
+
+    // Mise à jour de la référence pour la prochaine fois
+    prevLengthRef.current = (boardingPasses || []).length;
+  }, [(boardingPasses || []).length]);
+
   return (
     
     <View style={styles.container}>
@@ -79,7 +104,7 @@ export const FlightsScreen = ({ boardingPasses, onDelete }) => {
         style={styles.flightsList} 
         onLayout={(event) => setListHeight(event.nativeEvent.layout.height)}
       >
-        {boardingPasses.map((bp, index) => (
+        {(boardingPasses || []).map((bp, index) => (
           <BoardingPassCard
                   key={bp.id}
                   boardingPass={bp}

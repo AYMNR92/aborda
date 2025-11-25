@@ -1,14 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   clamp,
+  interpolate,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
+  withSpring,
   withTiming
 } from 'react-native-reanimated';
 import { getAirlineName } from '../utils/airlines.js';
@@ -27,15 +30,14 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
     return brightness > 155 ? '#000000' : '#FFFFFF';
   };
 
-  const [layout, setLayout] = useState({ width: 0, height: 0 });
   const textColor = getTextColor(bgColor);
 
   const tiltX = useSharedValue(0);
   const tiltY = useSharedValue(0);
   const isPressed = useSharedValue(false);
-
   const [cardHeight, setCardHeight] = useState(0);
   const translateY = useSharedValue(0);
+  const {height: screenHeight} = useWindowDimensions();
 
   const tap = Gesture.Tap()
   .onBegin(() => {
@@ -64,36 +66,52 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
     .onUpdate((event) => {
       // Ne s'active que si cette carte est active
       if (activeCardIndex.value !== index) return;
-      const maxTilt = 30; // degrés max
-      tiltY.value = clamp(event.translationX / 10, -maxTilt, maxTilt);
-      tiltX.value = clamp(-event.translationY / 10, -maxTilt, maxTilt);
+      const maxTilt = 20; // degrés max
+      tiltY.value = clamp(event.translationX / 8, -maxTilt, maxTilt);
+      tiltX.value = clamp(-event.translationY / 8, -maxTilt, maxTilt);
     })
     .onEnd(() => {
       // Ne s'active que si cette carte est active
       if (activeCardIndex.value !== index) return;
-      tiltX.value = 0;
-      tiltY.value = 0;
+      tiltX.value = withSpring(0);
+      tiltY.value = withSpring(0);
       isPressed.value = false;
     });
 
   // Utiliser Simultaneous pour que tap et pan puissent fonctionner ensemble
   const composedGesture = Gesture.Simultaneous(tap, panGesture);
-  const {height: screenHeight} = useWindowDimensions();
 
-  const buttonOpacity = useDerivedValue(() => {
+
+  const openAnimationProgress = useDerivedValue(() => {
     return withTiming(activeCardIndex.value === index ? 1 : 0, { duration: 300 });
   });
 
   const deleteButtonStyle = useAnimatedStyle(() => {
     return {
-      opacity: buttonOpacity.value,
+      opacity: openAnimationProgress.value,
       // Astuce : on déplace le bouton pour qu'il ne gêne pas quand il est invisible
       transform: [
-        { translateY: buttonOpacity.value === 0 ? -20 : 0 }, // Petit effet de glissement
-        { scale: buttonOpacity.value }
+        { translateY: openAnimationProgress.value === 0 ? -20 : 0 }, // Petit effet de glissement
+        { scale: openAnimationProgress.value }
       ],
       // Si opacité 0, on désactive les clics (pointerEvents n'est pas animable directement mais géré par l'opacité visuelle)
-      display: buttonOpacity.value === 0 ? 'none' : 'flex',
+      display: openAnimationProgress.value === 0 ? 'none' : 'flex',
+    };
+  });
+
+  const animatedGlareStyle = useAnimatedStyle(() => {
+    // On mappe l'angle d'inclinaison (ex: -30deg à 30deg) vers un déplacement en pixels (ex: -150px à 150px)
+    const translateX = interpolate(tiltY.value, [-35, 35], [-300, 300]);
+    const translateY = interpolate(tiltX.value, [-35, 35], [-300, 300]);
+    
+    return {
+      opacity: openAnimationProgress.value, // Visible seulement si ouvert
+      transform: [
+        { translateX: translateX },
+        { translateY: translateY },
+        // Rotation initiale pour que le reflet soit en diagonale
+        { rotate: '35deg' } 
+      ]
     };
   });
 
@@ -164,6 +182,9 @@ function formatBoardingDate(dateString) {
         onLayout={(event) => setCardHeight(event.nativeEvent.layout.height)}
     >
       <View style={[styles.card, { backgroundColor: bgColor }]}>
+
+      <View style={styles.cardInnerContent}>
+
       {/* Header : Compagnie + Numéro de vol*/}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -245,7 +266,17 @@ function formatBoardingDate(dateString) {
         </View>
         
       </View>
-
+      <Animated.View style={[styles.glareEffectContainer, animatedGlareStyle]}>
+              <LinearGradient
+                // Couleurs : Transparent -> Blanc semi-transparent -> Transparent
+                colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+                locations={[0.3, 0.5, 0.7]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+      </Animated.View>
+      </View>
       </View>
       <Animated.View style={[styles.deleteButtonContainer, deleteButtonStyle]}>
         <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
@@ -264,12 +295,10 @@ const styles = StyleSheet.create({
   },
   card: {
     height: 250,
+    width: '100%',
     borderRadius: 10,
     borderColor: '#00000027',
     borderWidth: 1,
-
-    paddingHorizontal: 15,
-    paddingTop : 10,
     marginBottom: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -279,7 +308,27 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     
   },
+  cardInnerContent: {
+    flex: 1,
+    overflow: 'hidden', // C'est lui qui coupe le reflet qui dépasse
+    borderRadius: 10,   // Doit correspondre au border radius de la carte
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+  // ✨ NOUVEAU ✨ : Le style du conteneur du reflet
+  glareEffectContainer: {
+    position: 'absolute',
+    top: '50%',   // On le positionne bien au-dessus et à gauche pour commencer
+    left: '50%',
+    width: 1200,  // Beaucoup plus large que la carte
+    height: 1200, // Beaucoup plus haut que la carte
 
+    marginLeft: -600,
+    marginTop: -600,
+
+    zIndex: 10,  // Au-dessus du contenu texte
+    pointerEvents: 'none', // Pour ne pas bloquer les gestes
+  },
   // Header
   header: {
     flexDirection: 'row',
