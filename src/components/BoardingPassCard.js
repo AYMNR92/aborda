@@ -9,8 +9,8 @@ import Animated, {
   useSharedValue,
   withTiming
 } from 'react-native-reanimated';
-import { AirlineLogo } from '../utils/AirlineLogo.js';
-import { getAirlineName } from './airlines.js';
+import { getAirlineName } from '../utils/airlines.js';
+import { AirlineLogo } from './AirlineLogo.js';
 
 export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex}) => {
   // Couleur de la compagnie (ou bleu par défaut)
@@ -122,18 +122,6 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
     }
   );
 
-function formatBoardingDate(dateString) {
-  const [day, month, year] = dateString.split("/");
-
-  const date = new Date(year, month - 1, day);
-
-  const d = String(date.getDate()).padStart(2, "0");
-  const m = date.toLocaleString("en-US", { month: "short" }).toUpperCase();
-  const y = String(date.getFullYear()).slice(-2);
-
-  return `${d}${m}${y}`; // 20SEP24
-}
-
   return (
     <GestureDetector gesture={composedGesture}>
     <Animated.View
@@ -146,7 +134,7 @@ function formatBoardingDate(dateString) {
     >
       <View style={[styles.card, { backgroundColor: bgColor }]}>
       {/* Header : Compagnie + Numéro de vol*/}
-      <View style={styles.header}>
+        <View style={styles.header}>
         <View style={styles.headerLeft}>
           {/* Logo de la compagnie */}
           <AirlineLogo 
@@ -205,7 +193,7 @@ function formatBoardingDate(dateString) {
             DATE
           </Text>
           <Text style={[styles.detailValue, { color: textColor }]}>
-            {formatBoardingDate(boardingPass.date)}
+            {boardingPass.date}
           </Text>
         </View>
         <View style={styles.detailItem}>
@@ -227,12 +215,12 @@ function formatBoardingDate(dateString) {
         
       </View>
 
-      {/* Footer : Tap to view details
+      {/* Footer : Tap to view details */}
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: textColor, opacity: 0.6 }]}>
           Tap to view full details
         </Text>
-      </View> */}
+      </View>
 
       </View>
     </Animated.View>
@@ -245,21 +233,19 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    height: 250,
+    height: 350,
     borderRadius: 10,
     borderColor: '#00000027',
     borderWidth: 1,
-
-    paddingHorizontal: 15,
-    paddingTop : 10,
-    marginBottom: 5,
+    padding: 24,
+    marginBottom: 0,
+    marginHorizontal: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 8,
     overflow: 'visible',
-    
   },
 
   // Header
@@ -287,7 +273,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 32,
   },
   headerRight: {
     flexDirection: 'row',
@@ -309,8 +295,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginHorizontal: -30,
-    // marginBottom: 15,
+    marginHorizontal: -50,
+    marginBottom: 25,
   },
   cityBlock: {
     flex: 1,
@@ -354,7 +340,7 @@ const styles = StyleSheet.create({
   detailsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 5,
+    marginBottom: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.2)',
@@ -376,7 +362,7 @@ const styles = StyleSheet.create({
   // Footer
   footer: {
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 8,
   },
   footerText: {
     fontSize: 11,

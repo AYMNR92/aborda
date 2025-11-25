@@ -29,21 +29,6 @@ export const ScannerScreen = ({ onScanSuccess, onClose }) => {
     const parsed = parseBCBP(data);
     
     if (parsed) {
-      // Alert.alert(
-      //   '✅ Scan Réussi !',
-      //   `Vol ${parsed.airline} ${parsed.flightNumber}\n${parsed.origin} → ${parsed.destination}`,
-      //   [
-      //     {
-      //       text: 'Ajouter',
-      //       onPress: () => onScanSuccess(parsed),
-      //     },
-      //     {
-      //       text: 'Annuler',
-      //       onPress: () => setScanned(false),
-      //       style: 'cancel',
-      //     },
-      //   ]
-      // );
       onScanSuccess(parsed);
     } else {
       Alert.alert(
@@ -65,19 +50,6 @@ export const ScannerScreen = ({ onScanSuccess, onClose }) => {
     const parsed = parseBCBP(bcbpString);
     
     if (parsed) {
-      // Alert.alert(
-      //   '✅ Test Réussi !',
-      //   `Vol ${parsed.airline} ${parsed.flightNumber}\n${parsed.origin} → ${parsed.destination}`,
-      //   [
-      //     {
-      //       text: 'Ajouter',
-      //       onPress: () => {
-      //         setShowDevPanel(false);
-      //         onScanSuccess(parsed);
-      //       },
-      //     },
-      //   ]
-      // );
       setShowDevPanel(false);
       onScanSuccess(parsed);
 
