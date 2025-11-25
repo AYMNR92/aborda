@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { loadAirportsDatabase } from '../utils/airportsDatabase.js';
-import { formatDistance } from '../utils/distanceCalculator.js';
+import { formatDistance } from '../utils/formatters.js';
 
 const { width, height } = Dimensions.get('window');
 

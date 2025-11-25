@@ -14,14 +14,14 @@ import {
   withClamp,
   withDecay
 } from 'react-native-reanimated';
-import { BoardingPassCard } from '../utils/BoardingPassCard.js';
-import { formatDistance } from '../utils/distanceCalculator.js';
+import { BoardingPassCard } from '../components/BoardingPassCard.js';
+import { formatDistance } from '../utils/formatters.js';
 
 configureReanimatedLogger({
   strict: false, // Reanimated runs in strict mode by default
 });
 
-export const FlightsScreen = ({ boardingPasses }) => {
+export const FlightsScreen = ({ boardingPasses, onDelete }) => {
   const [listHeight, setListHeight] = useState(0);
   const { height: screenHeight } = useWindowDimensions();
 
@@ -86,6 +86,7 @@ export const FlightsScreen = ({ boardingPasses }) => {
                   index={index}
                   scrollY={scrollY}
                   activeCardIndex={activeCardIndex}
+                  onDelete={() => onDelete(bp.id)}
           />
         ))}
       </View>

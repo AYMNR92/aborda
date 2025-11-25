@@ -1,18 +1,20 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   clamp,
   useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withTiming
 } from 'react-native-reanimated';
 import { getAirlineName } from '../utils/airlines.js';
 import { AirlineLogo } from './AirlineLogo.js';
 
-export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex}) => {
+export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex, onDelete}) => {
   // Couleur de la compagnie (ou bleu par défaut)
   const bgColor = boardingPass.bgColor || '#E5E7EB';
   
@@ -78,6 +80,23 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
   const composedGesture = Gesture.Simultaneous(tap, panGesture);
   const {height: screenHeight} = useWindowDimensions();
 
+  const buttonOpacity = useDerivedValue(() => {
+    return withTiming(activeCardIndex.value === index ? 1 : 0, { duration: 300 });
+  });
+
+  const deleteButtonStyle = useAnimatedStyle(() => {
+    return {
+      opacity: buttonOpacity.value,
+      // Astuce : on déplace le bouton pour qu'il ne gêne pas quand il est invisible
+      transform: [
+        { translateY: buttonOpacity.value === 0 ? -20 : 0 }, // Petit effet de glissement
+        { scale: buttonOpacity.value }
+      ],
+      // Si opacité 0, on désactive les clics (pointerEvents n'est pas animable directement mais géré par l'opacité visuelle)
+      display: buttonOpacity.value === 0 ? 'none' : 'flex',
+    };
+  });
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -122,6 +141,18 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
     }
   );
 
+function formatBoardingDate(dateString) {
+  const [day, month, year] = dateString.split("/");
+
+  const date = new Date(year, month - 1, day);
+
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = date.toLocaleString("en-US", { month: "short" }).toUpperCase();
+  const y = String(date.getFullYear()).slice(-2);
+
+  return `${d}${m}${y}`; // 20SEP24
+}
+
   return (
     <GestureDetector gesture={composedGesture}>
     <Animated.View
@@ -134,7 +165,7 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
     >
       <View style={[styles.card, { backgroundColor: bgColor }]}>
       {/* Header : Compagnie + Numéro de vol*/}
-        <View style={styles.header}>
+      <View style={styles.header}>
         <View style={styles.headerLeft}>
           {/* Logo de la compagnie */}
           <AirlineLogo 
@@ -193,7 +224,7 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
             DATE
           </Text>
           <Text style={[styles.detailValue, { color: textColor }]}>
-            {boardingPass.date}
+            {formatBoardingDate(boardingPass.date)}
           </Text>
         </View>
         <View style={styles.detailItem}>
@@ -215,14 +246,13 @@ export const BoardingPassCard = ({ boardingPass, index, scrollY, activeCardIndex
         
       </View>
 
-      {/* Footer : Tap to view details */}
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: textColor, opacity: 0.6 }]}>
-          Tap to view full details
-        </Text>
       </View>
-
-      </View>
+      <Animated.View style={[styles.deleteButtonContainer, deleteButtonStyle]}>
+        <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+          <Ionicons name="trash-outline" size={20} color="#FFF" />
+          <Text style={styles.deleteText}>Supprimer</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </Animated.View>
     </GestureDetector>
   );
@@ -233,19 +263,21 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    height: 350,
+    height: 250,
     borderRadius: 10,
     borderColor: '#00000027',
     borderWidth: 1,
-    padding: 24,
-    marginBottom: 0,
-    marginHorizontal: 0,
+
+    paddingHorizontal: 15,
+    paddingTop : 10,
+    marginBottom: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 8,
     overflow: 'visible',
+    
   },
 
   // Header
@@ -273,7 +305,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
   },
   headerRight: {
     flexDirection: 'row',
@@ -295,8 +327,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginHorizontal: -50,
-    marginBottom: 25,
+    marginHorizontal: -30,
+    // marginBottom: 15,
   },
   cityBlock: {
     flex: 1,
@@ -331,7 +363,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   passengerName: {
-    fontSize: 25,
+    fontSize: 20,
     fontFamily: 'Inter_500Medium',
   },
 
@@ -340,7 +372,7 @@ const styles = StyleSheet.create({
   detailsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 5,
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.2)',
@@ -362,10 +394,35 @@ const styles = StyleSheet.create({
   // Footer
   footer: {
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 2,
   },
   footerText: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    top: 260, // Juste en dessous de la carte (hauteur 250 + 10 marge)
+    alignSelf: 'center',
+    zIndex: 0, // Derrière la carte si elle se ferme
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    backgroundColor: '#EF4444', // Rouge
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  deleteText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    marginLeft: 8,
+    fontSize: 14,
   },
 });

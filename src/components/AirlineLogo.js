@@ -8,7 +8,7 @@ export const AirlineLogo = ({ iataCode, size = 40, style }) => {
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      <SvgUri width="110%" height="170%" source={{ uri: logoUrl }} />
+      <SvgUri width="100%" height="100%" source={{ uri: logoUrl }} />
     </View>
   );
 };

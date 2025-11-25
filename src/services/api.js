@@ -38,6 +38,13 @@ export const saveFlightToBackend = async (parsedBCBP) => {
       throw new Error(data.error || "Erreur serveur");
     }
 
+    if (data.isDuplicate) {
+        console.log("⚠️ Vol déjà existant, on ignore.");
+        // On retourne un objet factice pour ne pas casser la suite du code
+        // mais sans ID pour qu'il ne soit pas ajouté à la liste visuelle en double
+        return { isDuplicate: true };
+    }
+
     return data.flight;
   } catch (error) {
     console.error("❌ Erreur API saveFlight:", error);
@@ -115,5 +122,25 @@ export const fetchUserFlights = async () => {
   } catch (error) {
     console.error("❌ Erreur fetchUserFlights:", error);
     return [];
+  }
+};
+
+export const deleteFlightFromBackend = async (flightId) => {
+  try {
+    const token = await getAuthToken();
+    if (!token) throw new Error("Non connecté");
+
+    const response = await fetch(`${API_BASE_URL}/flights/${flightId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!response.ok) throw new Error("Erreur suppression serveur");
+    return true;
+  } catch (error) {
+    console.error("❌ Erreur deleteFlight:", error);
+    throw error;
   }
 };

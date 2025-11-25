@@ -10,7 +10,8 @@ const requireAuth = require('./middleware/authMiddleware');
 const { 
   saveNewFlight, 
   getFlightRoutes, 
-  getUserFlights 
+  getUserFlights ,
+  deleteFlight
 } = require('./api/services/flightServices'); 
 
 const { getUserStats } = require('./api/services/statsService');
@@ -39,6 +40,18 @@ app.post('/api/flights', requireAuth, async (req, res) => {
 
     } catch (error) {
         console.error("Erreur POST /flights:", error.message);
+
+        // --- GESTION DES DOUBLONS (Code erreur Postgres 23505) ---
+        if (error.message.includes('unique constraint') || error.code === '23505') {
+             // On renvoie un succès (200) ou une info (409)
+             // Ici on renvoie 200 pour que l'appli ne mette pas d'alerte rouge effrayante
+             return res.status(200).json({ 
+                 message: "Ce vol est déjà dans votre liste.", 
+                 flight: null, // Pas de nouveau vol
+                 isDuplicate: true 
+             });
+        }
+
         if (error.message.includes('foreign key constraint')) {
              return res.status(401).json({ error: "Utilisateur invalide." });
         }
@@ -79,6 +92,21 @@ app.get('/api/stats', requireAuth, async (req, res) => {
     } catch (error) {
         console.error("Erreur GET /stats:", error.message);
         res.status(500).json({ error: "Erreur récupération stats" });
+    }
+});
+
+// 5. ROUTE SUPPRESSION (DELETE)
+app.delete('/api/flights/:id', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const flightId = req.params.id;
+
+        await deleteFlight(flightId, userId);
+        
+        res.status(200).json({ message: "Vol supprimé" });
+    } catch (error) {
+        console.error("Erreur DELETE /flights:", error.message);
+        res.status(500).json({ error: "Impossible de supprimer le vol" });
     }
 });
 

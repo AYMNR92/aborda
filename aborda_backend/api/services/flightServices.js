@@ -107,14 +107,26 @@ async function getUserFlights(userId) {
       distance_km
     `)
     .eq('user_id', userId) // 🔒 C'est ici que se fait la ségrégation !
-    .order('departure_date', { ascending: false }); // Les plus récents en premier
+    .order('created_at', { ascending: true }); // Les plus récents en premier
 
   if (error) throw new Error(error.message);
   return data;
 }
 
+async function deleteFlight(flightId, userId) {
+  const { error } = await supabase
+    .from('flights')
+    .delete()
+    .eq('id', flightId)
+    .eq('user_id', userId); // SÉCURITÉ : On vérifie que le vol appartient bien à l'user
+
+  if (error) throw new Error(error.message);
+  return true;
+}
+
 module.exports = {
     saveNewFlight,
     getFlightRoutes,
-    getUserFlights
+    getUserFlights,
+    deleteFlight
 };
