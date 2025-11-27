@@ -15,6 +15,7 @@ const {
 } = require('./api/services/flightServices'); 
 
 const { getUserStats } = require('./api/services/statsService');
+const { createTrip, getAllTrips } = require('./api/services/tripService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -107,6 +108,31 @@ app.delete('/api/flights/:id', requireAuth, async (req, res) => {
     } catch (error) {
         console.error("Erreur DELETE /flights:", error.message);
         res.status(500).json({ error: "Impossible de supprimer le vol" });
+    }
+});
+
+app.post('/api/trips', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const tripData = req.body; // { title, description, photos: [url], flightId... }
+
+        console.log("📝 Nouveau Trip par :", userId);
+        const newTrip = await createTrip(tripData, userId);
+        
+        res.status(201).json({ message: "Trip publié !", trip: newTrip });
+    } catch (error) {
+        console.error("Erreur POST /trips:", error.message);
+        res.status(500).json({ error: "Erreur création trip" });
+    }
+});
+
+app.get('/api/trips', requireAuth, async (req, res) => {
+    try {
+        const trips = await getAllTrips();
+        res.json(trips);
+    } catch (error) {
+        console.error("Erreur GET /trips:", error.message);
+        res.status(500).json({ error: "Impossible de charger le feed" });
     }
 });
 

@@ -144,3 +144,91 @@ export const deleteFlightFromBackend = async (flightId) => {
     throw error;
   }
 };
+
+// POSTER UN TRIP (Données texte)
+export const postTrip = async (tripData) => {
+  const token = await getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/trips`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(tripData)
+  });
+  if (!response.ok) throw new Error("Erreur publication");
+  return await response.json();
+};
+
+// UPLOADER UNE IMAGE (Vers Supabase Storage)
+export const uploadImageToSupabase = async (uri) => {
+  try {
+    // 1. Préparer le nom et le type
+    const fileExt = uri.split('.').pop();
+    const filename = `trip_${Date.now()}.${fileExt}`;
+    
+    // 2. Créer un FormData (C'est la solution native pour remplacer le Blob)
+    const formData = new FormData();
+    formData.append('file', {
+      uri: uri,
+      name: filename,
+      type: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`, // ex: image/jpeg
+    });
+
+    // 3. Upload via fetch standard vers l'API Storage de Supabase
+    // On n'utilise pas supabase.storage.upload() ici pour éviter les bugs de Blob en React Native
+    // On tape directement sur l'URL REST de Supabase.
+    
+    const SUPABASE_PROJECT_ID = 'ton-projet-id'; // ⚠️ Récupère l'ID dans ton URL Supabase (ex: 'abcdefgh')
+    // Ou mieux : extrais-le de ton URL existante dans config.js si possible, sinon mets-le en dur pour tester.
+    // L'URL ressemble à : https://[PROJECT_ID].supabase.co
+    
+    // Astuce : On peut récupérer l'URL de base depuis ton client supabase si besoin, 
+    // mais pour ce test, assure-toi d'avoir l'URL complète.
+    const fileUrl = `${API_BASE_URL.replace('/api', '')}/storage/v1/object/trip-images/${filename}`; 
+    // ⚠️ ATTENTION : Ci-dessus je tente de deviner l'URL, mais la méthode FormData avec le SDK est préférable si elle marche.
+    
+    // REVENONS À LA MÉTHODE SDK AVEC LE CORRECTIF FORM DATA :
+    const { data, error } = await supabase.storage
+      .from('trip-images')
+      .upload(filename, formData, {
+        contentType: 'multipart/form-data', // Important pour FormData
+      });
+
+    if (error) {
+        // Si l'erreur persiste avec le SDK, c'est qu'il force l'usage de Blob en interne.
+        // Dans ce cas, il faut utiliser le polyfill ou l'arraybuffer.
+        // Essayons d'abord cette version FormData qui marche souvent sur les versions récentes.
+        throw error;
+    }
+
+    // 4. Récupérer l'URL publique
+    const { data: publicUrlData } = supabase.storage
+      .from('trip-images')
+      .getPublicUrl(filename);
+
+    return publicUrlData.publicUrl;
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    throw error;
+  }
+};
+
+export const fetchAllTrips = async () => {
+  try {
+    const token = await getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/trips`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error("Erreur chargement feed");
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Erreur fetchAllTrips:", error);
+    return [];
+  }
+};

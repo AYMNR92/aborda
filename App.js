@@ -1,17 +1,20 @@
 import { Inter_400Regular, Inter_500Medium, Inter_700Bold, Inter_900Black, useFonts } from '@expo-google-fonts/inter';
-import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import './src/utils/polyfills.js';
 
+// Barre
+import { CustomTabBar } from './src/components/CustomTabBar.js';
+
 // Écrans
 import { AuthScreen } from './src/screens/AuthScreen.js';
+import { CreateTripScreen } from './src/screens/CreateTripScreen.js';
+import { ExploreScreen } from './src/screens/ExploreScreen.js';
 import { FlightsScreen } from './src/screens/FlightsScreen.js';
 import { MapScreen } from './src/screens/MapScreen.js';
 import { PassportScreen } from './src/screens/PassportScreen.js';
@@ -31,48 +34,38 @@ const Stack = createNativeStackNavigator();
 function MainTabs({ boardingPasses, onDelete }) {
   return (
     <Tab.Navigator
+      // On utilise la TabBar personnalisée
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6050dc',
-        tabBarInactiveTintColor: '#ffffff56',
-        tabBarShowLabel: false,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarStyle: styles.tabBar,
-        tabBarBackground: () => (
-          <BlurView intensity={95} tint="extraLight" style={styles.blurView} />
-        ),
-      }} 
+        // On rend le fond transparent pour voir le contenu derrière la barre flottante
+        tabBarBackground: () => <View style={{flex:1, backgroundColor:'transparent'}} />,
+        tabBarStyle: { position: 'absolute', borderTopWidth: 0, elevation: 0, backgroundColor: 'transparent' },
+        lazy: true, // Ne charge l'onglet que quand on clique dessus
+        detachInactiveScreens: true, // "Débranche" les écrans invisibles pour libérer le CPU
+        freezeOnBlur: true,
+      }}
     >
+      {/* 1. ExploreScreen (Nouveau Feed) */}
       <Tab.Screen
-        name="Flights"
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'airplane' : 'airplane-outline'} size={24} color={color} />
-          ),
-        }}
-      >
+        name="ExploreScreen"
+        component={ExploreScreen}
+      />
+
+      {/* 2. CardsScreen (Ton Wallet / Flights) */}
+      <Tab.Screen name="Flights">
         {() => <FlightsScreen boardingPasses={boardingPasses} onDelete={onDelete}/>}
       </Tab.Screen>
 
-      <Tab.Screen
-        name="Map"
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'planet' : 'planet-outline'} size={24} color={color} />
-          ),
-        }}
-      >
+      {/* 3. PlanetScreen (Ta Map) */}
+      <Tab.Screen name="PlanetScreen">
         {() => <MapScreen boardingPasses={boardingPasses} />}
       </Tab.Screen>
 
-      <Tab.Screen
-        name="Passport"
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'id-card' : 'id-card-outline'} size={24} color={color} />
-          ),
-        }}
-        component={PassportScreen}
+      {/* 4. MeScreen (Ton Passeport) */}
+      <Tab.Screen 
+        name="MeScreen" 
+        component={PassportScreen} 
       />
     </Tab.Navigator>
   );
@@ -263,6 +256,14 @@ function AppContent() {
               />
             )}
           </Stack.Screen>
+          <Stack.Screen 
+            name="CreateTrip" 
+            component={CreateTripScreen}
+            options={{ 
+              presentation: 'modal', // Ça fait glisser l'écran depuis le bas
+              animation: 'slide_from_bottom' // Pour Android
+            }} 
+          />
         </>
       ) : (
         <Stack.Screen name="Auth" component={AuthScreen} />

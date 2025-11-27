@@ -15,7 +15,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.aborda.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Pour ajouter des photos à vos Trips et enrichir votre journal de bord.",
+        "NSCameraUsageDescription": "Pour prendre des photos de vos Cartes d'Embarquement et de vos voyages."
       }
     },
     "android": {
@@ -26,7 +28,9 @@
       "package": "com.aborda.app",
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
