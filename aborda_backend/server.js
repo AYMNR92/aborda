@@ -15,7 +15,9 @@ const {
 } = require('./api/services/flightServices'); 
 
 const { getUserStats } = require('./api/services/statsService');
-const { createTrip, getAllTrips } = require('./api/services/tripService');
+const { createTrip, getAllTrips, deleteTrip } = require('./api/services/tripService');
+const { toggleLike, toggleBookmark } = require('./api/services/interactionService');
+const { searchPlaces } = require('./api/services/placesService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -114,10 +116,11 @@ app.delete('/api/flights/:id', requireAuth, async (req, res) => {
 app.post('/api/trips', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
+        const userEmail = req.user.email;
         const tripData = req.body; // { title, description, photos: [url], flightId... }
 
-        console.log("📝 Nouveau Trip par :", userId);
-        const newTrip = await createTrip(tripData, userId);
+        console.log("📝 Nouveau Trip par :", userEmail);
+        const newTrip = await createTrip(tripData, userId, userEmail);
         
         res.status(201).json({ message: "Trip publié !", trip: newTrip });
     } catch (error) {
@@ -128,11 +131,65 @@ app.post('/api/trips', requireAuth, async (req, res) => {
 
 app.get('/api/trips', requireAuth, async (req, res) => {
     try {
-        const trips = await getAllTrips();
+        const userId = req.user.id;
+        const trips = await getAllTrips(userId);
         res.json(trips);
     } catch (error) {
         console.error("Erreur GET /trips:", error.message);
         res.status(500).json({ error: "Impossible de charger le feed" });
+    }
+});
+
+app.delete('/api/trips/:id', requireAuth, async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const userId = req.user.id;
+
+        await deleteTrip(tripId, userId);
+        res.status(200).json({ message: "Trip supprimé" });
+
+    } catch (error) {
+        console.error("Erreur DELETE /trips:", error.message);
+        res.status(500).json({ error: "Impossible de supprimer ce trip" });
+    }
+});
+
+// ROUTE LIKE
+app.post('/api/trips/:id/like', requireAuth, async (req, res) => {
+    try {
+        const result = await toggleLike(req.params.id, req.user.id);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur like" });
+    }
+});
+
+// Recherche d'adresses
+app.get('/api/places/search', requireAuth, async (req, res) => {
+    try {
+        const query = req.query.q;
+        console.log("🔍 Recherche lieu :", query); // Log pour debug
+
+        if (!query || query.length < 3) {
+            return res.json([]); 
+        }
+
+        const places = await searchPlaces(query);
+        res.json(places);
+
+    } catch (error) {
+        console.error("Erreur Search:", error);
+        res.status(500).json({ error: "Erreur recherche" });
+    }
+});
+
+// ROUTE BOOKMARK
+app.post('/api/trips/:id/bookmark', requireAuth, async (req, res) => {
+    try {
+        const result = await toggleBookmark(req.params.id, req.user.id);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur bookmark" });
     }
 });
 

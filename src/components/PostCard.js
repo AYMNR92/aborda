@@ -1,11 +1,50 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { toggleBookmarkTrip, toggleLikeTrip } from '../services/api';
 const { width } = Dimensions.get('window');
 
-export const PostCard = ({ trip }) => {
-  const flight = trip.flight; // Données du vol lié (si existe)
+export const PostCard = ({ trip, onDelete }) => {
   const { user } = useAuth();
+  const flight = trip.flight; // Données du vol lié (si existe)
+  const isMyPost = user && user.id === trip.user_id;
+
+  const [liked, setLiked] = useState(trip.isLiked);
+  const [likesCount, setLikesCount] = useState(trip.likesCount || 0);
+  const [bookmarked, setBookmarked] = useState(trip.isBookmarked);
+  
+  // Fonction Like
+  const handleLike = async () => {
+    // 1. Mise à jour visuelle immédiate (Optimistic)
+    const newStatus = !liked;
+    setLiked(newStatus);
+    setLikesCount(prev => newStatus ? prev + 1 : prev - 1);
+
+    try {
+      // 2. Appel API en arrière-plan
+      await toggleLikeTrip(trip.id);
+    } catch (error) {
+      // 3. Si erreur, on revient en arrière
+      setLiked(!newStatus);
+      setLikesCount(prev => newStatus ? prev - 1 : prev + 1);
+      console.error("Erreur like:", error);
+    }
+  };
+
+  // Fonction Bookmark
+  const handleBookmark = async () => {
+    setBookmarked(!bookmarked);
+    try {
+      await toggleBookmarkTrip(trip.id);
+    } catch (error) {
+      setBookmarked(!bookmarked); // Rollback
+    }
+  };
+  
+  const authorName = trip.author_email 
+    ? trip.author_email.split('@')[0]
+    : "ANONYME";
   return (
     <View style={styles.card}>
       {/* HEADER: User info (Simulé pour l'instant) */}
@@ -13,15 +52,20 @@ export const PostCard = ({ trip }) => {
         <View style={styles.avatarPlaceholder}>
            <Text>👤</Text>
         </View>
-        <View>
-           <Text style={styles.username}>@{user?.email ? user.email.split('@')[0] : "VOYAGEUR"}</Text>
-           <Text style={styles.location}>Los Angeles</Text>
+        <View style={{flex:1}}>
+           <Text style={styles.username}>@{authorName}</Text>
+           <Text style={styles.location}>{trip.location}</Text>
         </View>
         {flight && (
             <View style={styles.badgeFlight}>
                 <Ionicons name="airplane" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{flight.departure_airport} ➔ {flight.arrival_airport}</Text>
             </View>
+        )}
+        {isMyPost && (
+            <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
+                <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            </TouchableOpacity>
         )}
       </View>
 
@@ -43,17 +87,36 @@ export const PostCard = ({ trip }) => {
         
         {/* BARRE D'ACTIONS */}
         <View style={styles.actions}>
-            <View style={styles.actionBtn}>
-                <Ionicons name="heart-outline" size={24} color="#fff" />
-                <Text style={styles.actionText}>0</Text>
-            </View>
-            <View style={styles.actionBtn}>
-                <Ionicons name="chatbubble-outline" size={22} color="#fff" />
-                <Text style={styles.actionText}>Commenter</Text>
-            </View>
+            
+            {/* BOUTON LIKE */}
+            <TouchableOpacity style={styles.actionBtn} onPress={handleLike}>
+                <Ionicons 
+                  name={liked ? "heart" : "heart-outline"} 
+                  size={26} 
+                  color={liked ? "#EF4444" : "#fff"} 
+                />
+                <Text style={[styles.actionText, liked && {color: '#EF4444'}]}>
+                   {likesCount > 0 ? likesCount : ''}
+                </Text>
+            </TouchableOpacity>
+
+            {/* BOUTON COMMENTAIRE */}
+            <TouchableOpacity style={styles.actionBtn}>
+                <Ionicons name="chatbubble-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+
+            {/* ESPACE FLEXIBLE */}
             <View style={{flex:1}} />
-            <Ionicons name="bookmark-outline" size={24} color="#fff" />
-        </View>
+
+            {/* BOUTON BOOKMARK */}
+            <TouchableOpacity onPress={handleBookmark}>
+                <Ionicons 
+                  name={bookmarked ? "bookmark" : "bookmark-outline"} 
+                  size={24} 
+                  color={bookmarked ? "#6050dc" : "#fff"} 
+                />
+            </TouchableOpacity>
+        </View>     
       </View>
     </View>
   );
@@ -61,7 +124,7 @@ export const PostCard = ({ trip }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#181f2aff',
     marginBottom: 20,
     borderRadius: 0, // Style "Instagram" ou 16 pour style "Card"
     borderBottomWidth: 1,
@@ -73,6 +136,12 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: '#334155',
     justifyContent: 'center', alignItems: 'center', marginRight: 10
+  },
+  deleteBtn: {
+      padding: 8,
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderRadius: 20,
+      marginLeft: 10
   },
   username: { color: '#fff', fontWeight: 'bold', fontSize: 14, paddingBottom: 5 },
   location: { color: '#94A3B8', fontSize: 12 },

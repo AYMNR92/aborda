@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PostCard } from '../components/PostCard'; // Import du composant
-import { fetchAllTrips } from '../services/api';
+import { deleteTripFromBackend, fetchAllTrips } from '../services/api';
 
 export const ExploreScreen = () => {
   const navigation = useNavigation();
@@ -31,6 +31,29 @@ export const ExploreScreen = () => {
     loadTrips();
   };
 
+  const handleDeleteTrip = (tripId) => {
+    Alert.alert(
+      "Supprimer ce Trip ?",
+      "Cette action est irréversible.",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Supprimer", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteTripFromBackend(tripId);
+              // Recharger la liste pour faire disparaître le post
+              loadTrips(); 
+            } catch (e) {
+              Alert.alert("Erreur : " + e.message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* HEADER FIXE */}
@@ -44,7 +67,14 @@ export const ExploreScreen = () => {
           <FlatList
             data={trips}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <PostCard trip={item} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                activeOpacity={0.9} // Petit effet visuel au clic
+                onPress={() => navigation.navigate('TripDetails', { trip: item })} // On navigue et on passe les données du trip
+              >
+                <PostCard trip={item} onDelete={() => handleDeleteTrip(item.id)} />
+              </TouchableOpacity>
+            )}            
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
             contentContainerStyle={{ paddingBottom: 100 }} // Pour le FAB
             ListEmptyComponent={
@@ -52,7 +82,6 @@ export const ExploreScreen = () => {
             }
           />
       )}
-
       {/* FAB */}
       <TouchableOpacity 
         style={styles.fab} 
@@ -66,7 +95,7 @@ export const ExploreScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#131313' },
   header: {
       paddingTop: 60, paddingBottom: 15, paddingHorizontal: 20,
       backgroundColor: '#000', borderBottomWidth: 1, borderBottomColor: '#1E293B'

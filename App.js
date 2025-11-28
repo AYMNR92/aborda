@@ -19,6 +19,7 @@ import { FlightsScreen } from './src/screens/FlightsScreen.js';
 import { MapScreen } from './src/screens/MapScreen.js';
 import { PassportScreen } from './src/screens/PassportScreen.js';
 import { ScannerScreen } from './src/screens/ScannerScreen.js';
+import { TripDetailsScreen } from './src/screens/TripDetailsScreen.js';
 
 // Services & Utils
 import { deleteFlightFromBackend, fetchUserFlights, saveFlightToBackend } from './src/services/api.js';
@@ -264,6 +265,7 @@ function AppContent() {
               animation: 'slide_from_bottom' // Pour Android
             }} 
           />
+          <Stack.Screen name="TripDetails" component={TripDetailsScreen} />
         </>
       ) : (
         <Stack.Screen name="Auth" component={AuthScreen} />

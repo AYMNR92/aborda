@@ -232,3 +232,59 @@ export const fetchAllTrips = async () => {
     return [];
   }
 };
+
+export const deleteTripFromBackend = async (tripId) => {
+  try {
+    const token = await getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error("Erreur suppression");
+    return true;
+  } catch (error) {
+    console.error("❌ Erreur API deleteTrip:", error);
+    throw error;
+  }
+};
+
+export const toggleLikeTrip = async (tripId) => {
+  const token = await getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/trips/${tripId}/like`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return await response.json();
+};
+
+export const toggleBookmarkTrip = async (tripId) => {
+  const token = await getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/trips/${tripId}/bookmark`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return await response.json();
+};
+
+// FONCTION DE RECHERCHE DE LIEUX
+export const searchPlaces = async (query) => {
+  try {
+    const token = await getAuthToken();
+    // On encode la requête pour gérer les espaces et accents
+    const encodedQuery = encodeURIComponent(query);
+    
+    const response = await fetch(`${API_BASE_URL}/places/search?q=${encodedQuery}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur searchPlaces:", error);
+    return [];
+  }
+};

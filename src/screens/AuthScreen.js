@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export const AuthScreen = () => {
@@ -25,6 +25,14 @@ export const AuthScreen = () => {
   }
 
   return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.kcontainer}
+    >
+    <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        keyboardShouldPersistTaps="handled"
+    >
     <View style={styles.container}>
       <Text style={styles.title}>{isLogin ? 'Connexion' : 'Inscription'}</Text>
       
@@ -55,10 +63,21 @@ export const AuthScreen = () => {
         </Text>
       </TouchableOpacity>
     </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  kcontainer: { 
+    flex: 1, 
+    backgroundColor: '#000000ff' // Même fond bleu nuit que le reste de l'app
+  },
+  scrollContent: {
+    flexGrow: 1, 
+    justifyContent: 'center', 
+    //padding: 20 
+  },
   container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#000' },
   title: { fontSize: 32, color: '#fff', fontWeight: 'bold', marginBottom: 40, textAlign: 'center' },
   input: { backgroundColor: '#1F2937', color: '#fff', padding: 15, borderRadius: 10, marginBottom: 15 },
