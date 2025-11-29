@@ -18,6 +18,7 @@ const { getUserStats } = require('./api/services/statsService');
 const { createTrip, getAllTrips, deleteTrip } = require('./api/services/tripService');
 const { toggleLike, toggleBookmark } = require('./api/services/interactionService');
 const { searchPlaces } = require('./api/services/placesService');
+const { createList, getUserLists, addItemToList, getListDetails } = require('./api/services/listService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -168,7 +169,8 @@ app.post('/api/trips/:id/like', requireAuth, async (req, res) => {
 app.get('/api/places/search', requireAuth, async (req, res) => {
     try {
         const query = req.query.q;
-        console.log("🔍 Recherche lieu :", query); // Log pour debug
+        // Log pour vérifier que la demande arrive bien
+        console.log("🔍 Recherche lieu :", query); 
 
         if (!query || query.length < 3) {
             return res.json([]); 
@@ -191,6 +193,40 @@ app.post('/api/trips/:id/bookmark', requireAuth, async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Erreur bookmark" });
     }
+});
+
+// 1. Créer une liste
+app.post('/api/lists', requireAuth, async (req, res) => {
+    try {
+        const { name, emoji } = req.body;
+        const list = await createList(req.user.id, name, emoji);
+        res.status(201).json(list);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 2. Mes listes
+app.get('/api/lists', requireAuth, async (req, res) => {
+    try {
+        const lists = await getUserLists(req.user.id);
+        res.json(lists);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 3. Ajouter un item à une liste
+app.post('/api/lists/:id/items', requireAuth, async (req, res) => {
+    try {
+        const { recommendationId } = req.body;
+        const result = await addItemToList(req.params.id, recommendationId);
+        res.json(result);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 4. Voir une liste
+app.get('/api/lists/:id', requireAuth, async (req, res) => {
+    try {
+        const items = await getListDetails(req.params.id);
+        res.json(items);
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // --- Démarrage ---

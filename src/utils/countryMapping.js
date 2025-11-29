@@ -1,0 +1,28 @@
+// Association manuelle Code Pays -> Code Continent
+export const countryToContinent = {
+  "AF": "AS", "AL": "EU", "DZ": "AF", "AD": "EU", "AO": "AF", "AG": "NA", "AR": "SA", "AM": "AS",
+  "AU": "OC", "AT": "EU", "AZ": "AS", "BS": "NA", "BH": "AS", "BD": "AS", "BB": "NA", "BY": "EU",
+  "BE": "EU", "BZ": "NA", "BJ": "AF", "BT": "AS", "BO": "SA", "BA": "EU", "BW": "AF", "BR": "SA",
+  "BN": "AS", "BG": "EU", "BF": "AF", "BI": "AF", "CV": "AF", "KH": "AS", "CM": "AF", "CA": "NA",
+  "CF": "AF", "TD": "AF", "CL": "SA", "CN": "AS", "CO": "SA", "KM": "AF", "CG": "AF", "CD": "AF",
+  "CR": "NA", "CI": "AF", "HR": "EU", "CU": "NA", "CY": "EU", "CZ": "EU", "DK": "EU", "DJ": "AF",
+  "DM": "NA", "DO": "NA", "EC": "SA", "EG": "AF", "SV": "NA", "GQ": "AF", "ER": "AF", "EE": "EU",
+  "ET": "AF", "FJ": "OC", "FI": "EU", "FR": "EU", "GA": "AF", "GM": "AF", "GE": "AS", "DE": "EU",
+  "GH": "AF", "GR": "EU", "GD": "NA", "GT": "NA", "GN": "AF", "GW": "AF", "GY": "SA", "HT": "NA",
+  "HN": "NA", "HU": "EU", "IS": "EU", "IN": "AS", "ID": "AS", "IR": "AS", "IQ": "AS", "IE": "EU",
+  "IT": "EU", "JM": "NA", "JP": "AS", "JO": "AS", "KZ": "AS", "KE": "AF", "KI": "OC", "KP": "AS",
+  "KR": "AS", "KW": "AS", "KG": "AS", "LA": "AS", "LV": "EU", "LB": "AS", "LS": "AF", "LR": "AF",
+  "LY": "AF", "LI": "EU", "LT": "EU", "LU": "EU", "MG": "AF", "MW": "AF", "MY": "AS", "MV": "AS",
+  "ML": "AF", "MT": "EU", "MH": "OC", "MR": "AF", "MU": "AF", "MX": "NA", "FM": "OC", "MD": "EU",
+  "MC": "EU", "MN": "AS", "ME": "EU", "MA": "AF", "MZ": "AF", "MM": "AS", "NA": "AF", "NR": "OC",
+  "NP": "AS", "NL": "EU", "NZ": "OC", "NI": "NA", "NE": "AF", "NG": "AF", "MK": "EU", "NO": "EU",
+  "OM": "AS", "PK": "AS", "PW": "OC", "PS": "AS", "PA": "NA", "PG": "OC", "PY": "SA", "PE": "SA",
+  "PH": "AS", "PL": "EU", "PT": "EU", "QA": "AS", "RO": "EU", "RU": "EU", "RW": "AF", "KN": "NA",
+  "LC": "NA", "VC": "NA", "WS": "OC", "SM": "EU", "ST": "AF", "SA": "AS", "SN": "AF", "RS": "EU",
+  "SC": "AF", "SL": "AF", "SG": "AS", "SK": "EU", "SI": "EU", "SB": "OC", "SO": "AF", "ZA": "AF",
+  "SS": "AF", "ES": "EU", "LK": "AS", "SD": "AF", "SR": "SA", "SE": "EU", "CH": "EU", "SY": "AS",
+  "TW": "AS", "TJ": "AS", "TZ": "AF", "TH": "AS", "TL": "AS", "TG": "AF", "TO": "OC", "TT": "NA",
+  "TN": "AF", "TR": "AS", "TM": "AS", "TV": "OC", "UG": "AF", "UA": "EU", "AE": "AS", "GB": "EU",
+  "US": "NA", "UY": "SA", "UZ": "AS", "VU": "OC", "VE": "SA", "VN": "AS", "YE": "AS", "ZM": "AF",
+  "ZW": "AF"
+};

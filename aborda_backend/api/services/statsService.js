@@ -1,6 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+const allCountries = require('../../data/allCountries.json');
+
+const countryNameMap = allCountries.reduce((acc, country) => {
+  acc[country.name] = country.code;
+  return acc;
+}, {});
+
 async function getUserStats(userId) {
   // 1. Récupérer tous les vols de l'utilisateur
   const { data: flights, error } = await supabase
@@ -23,11 +30,20 @@ async function getUserStats(userId) {
   const countriesCount = uniqueCountries.size;
 
   // Préparer la liste pour l'affichage des tampons
-  const visitedCountries = flights.map(f => ({
-    country: f.arrival?.country || "Inconnu",
-    city: f.arrival?.city || "Inconnu",
-    code: f.arrival_airport
-  }));
+  const visitedCountries = flights.map(f => {
+    const countryName = f.arrival?.country || "Inconnu";
+    
+    // On cherche le code correspondant au nom
+    // Si pas trouvé, on renvoie null ou "XX"
+    const codeIso = countryNameMap[countryName] || null;
+
+    return {
+      country: countryName,
+      city: f.arrival?.city || "Inconnu",
+      code: f.arrival_airport,
+      countryCode: codeIso // 👈 C'est cette donnée qui va débloquer la médaille !
+    };
+  });
 
   return {
     totalKm: Math.round(totalKm),

@@ -16,6 +16,7 @@ import { AuthScreen } from './src/screens/AuthScreen.js';
 import { CreateTripScreen } from './src/screens/CreateTripScreen.js';
 import { ExploreScreen } from './src/screens/ExploreScreen.js';
 import { FlightsScreen } from './src/screens/FlightsScreen.js';
+import { ListDetailsScreen } from './src/screens/ListDetailsScreen.js';
 import { MapScreen } from './src/screens/MapScreen.js';
 import { PassportScreen } from './src/screens/PassportScreen.js';
 import { ScannerScreen } from './src/screens/ScannerScreen.js';
@@ -266,6 +267,7 @@ function AppContent() {
             }} 
           />
           <Stack.Screen name="TripDetails" component={TripDetailsScreen} />
+          <Stack.Screen name="ListDetails" component={ListDetailsScreen} />
         </>
       ) : (
         <Stack.Screen name="Auth" component={AuthScreen} />

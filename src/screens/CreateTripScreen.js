@@ -462,38 +462,38 @@ export const CreateTripScreen = () => {
   };
 
   // Recherche (Debounce via timeout)
-  const handleSearch = (text) => {
-    setSearchQuery(text);
-    // Si on vide le champ, on vide les résultats tout de suite
-    if (text.length === 0) {
-        setSearchResults([]);
-        setSearchLoading(false);
-    }
+  const handleSearchInput = (text) => {
+      setSearchQuery(text);
   };
 
   useEffect(() => {
-    // Si le texte est trop court, on ne fait rien
-    if (!searchQuery || searchQuery.length <= 2) return;
+    // Si le texte est vide ou trop court, on nettoie et on arrête
+    if (!searchQuery || searchQuery.length <= 2) {
+        setSearchResults([]);
+        return;
+    }
 
     setSearchLoading(true);
 
-    // On crée un Timer : "Dans 500ms, lance la recherche"
-    const delaySearch = setTimeout(async () => {
-      console.log("🔎 Recherche lancée pour :", searchQuery);
-      try {
-        const results = await searchPlaces(searchQuery);
-        setSearchResults(results);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 500); // 500ms de délai (ajustable)
+    // 2. On prépare le timer : "Lance la recherche dans 500ms"
+    const timerId = setTimeout(async () => {
+        console.log("🔎 Recherche lancée pour :", searchQuery);
+        try {
+            const results = await searchPlaces(searchQuery);
+            // Vérification de sécurité : est-ce que le texte est toujours le même ?
+            // (Optionnel ici grâce au clearTimeout, mais bonne pratique)
+            setSearchResults(results);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSearchLoading(false);
+        }
+    }, 500);
 
-    // 🧹 NETTOYAGE MAGIQUE
-    // Si 'searchQuery' change AVANT les 500ms (donc si tu tapes une autre lettre),
-    // React exécute cette fonction de nettoyage qui ANNULE le timer précédent.
-    return () => clearTimeout(delaySearch);
+    // 3. LE NETTOYAGE (La clé du succès) 🧹
+    // Si tu tapes une nouvelle lettre AVANT les 500ms, React annule le timer précédent !
+    // Donc la recherche précédente n'est jamais lancée.
+    return () => clearTimeout(timerId);
 
   }, [searchQuery]);
 
@@ -649,7 +649,7 @@ export const CreateTripScreen = () => {
                     placeholder="Tapez un nom de lieu..."
                     placeholderTextColor="#666"
                     value={searchQuery}
-                    onChangeText={handleSearch}
+                    onChangeText={handleSearchInput}
                     autoFocus
                 />
 
@@ -660,16 +660,38 @@ export const CreateTripScreen = () => {
                         data={searchResults}
                         keyExtractor={(item) => item.id}
                         keyboardShouldPersistTaps="handled"
-                        renderItem={({ item }) => (
-                            <TouchableOpacity style={styles.resultItem} onPress={() => selectPlace(item)}>
-                                <Ionicons name="location-outline" size={24} color="#fff" />
-                                <View style={{marginLeft: 10, flex: 1}}>
-                                    <Text style={styles.resultName}>{item.name}</Text>
-                                    <Text style={styles.resultAddress} numberOfLines={1}>{item.address}</Text>
-                                </View>
-                                <Ionicons name="add-circle-outline" size={24} color="#6050dc" />
-                            </TouchableOpacity>
-                        )}
+                        renderItem={({ item }) => {
+                          // Petit helper pour choisir l'icône selon le type OSM
+                          let iconName = "location-outline";
+                          if (item.type === 'restaurant' || item.category === 'food') iconName = "restaurant-outline";
+                          if (item.type === 'hotel' || item.type === 'guest_house') iconName = "bed-outline";
+                          if (item.category === 'tourism' || item.category === 'historic') iconName = "camera-outline";
+                          if (item.type === 'bar' || item.type === 'pub') iconName = "beer-outline";
+
+                          return (
+                              <TouchableOpacity style={styles.resultItem} onPress={() => selectPlace(item)}>
+                                  {/* Icône dynamique */}
+                                  <View style={[styles.iconBox, {backgroundColor: '#334155'}]}>
+                                      <Ionicons name={iconName} size={20} color="#FFF" />
+                                  </View>
+
+                                  <View style={{marginLeft: 12, flex: 1}}>
+                                      {/* Nom du lieu (ex: Tour Eiffel) */}
+                                      <Text style={styles.resultName}>{item.name}</Text>
+                                      
+                                      {/* Type + Adresse (ex: Monument • Paris, France) */}
+                                      <Text style={styles.resultAddress} numberOfLines={2}>
+                                          <Text style={{color: '#6050dc', fontWeight:'bold'}}>
+                                              {item.type.toUpperCase()} • 
+                                          </Text> 
+                                          {' ' + item.address}
+                                      </Text>
+                                  </View>
+                                  
+                                  <Ionicons name="add-circle-outline" size={24} color="#6050dc" />
+                              </TouchableOpacity>
+                          );
+                      }}
                     />
                 )}
             </View>
@@ -730,5 +752,12 @@ const styles = StyleSheet.create({
   searchInput: { backgroundColor: '#1E293B', color: '#fff', padding: 15, borderRadius: 10, fontSize: 16, marginBottom: 15 },
   resultItem: { flexDirection: 'row', alignItems: 'center', padding: 15, borderBottomWidth: 1, borderBottomColor: '#334155' },
   resultName: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  resultAddress: { color: '#94A3B8', fontSize: 12, marginTop: 2 }
+  resultAddress: { color: '#94A3B8', fontSize: 12, marginTop: 2 },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });

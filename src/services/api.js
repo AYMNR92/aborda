@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import { API_BASE_URL } from '../utils/config';
 
 // Helper pour récupérer le token proprement
-const getAuthToken = async () => {
+export const getAuthToken = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token;
 };
@@ -273,7 +273,6 @@ export const toggleBookmarkTrip = async (tripId) => {
 export const searchPlaces = async (query) => {
   try {
     const token = await getAuthToken();
-    // On encode la requête pour gérer les espaces et accents
     const encodedQuery = encodeURIComponent(query);
     
     const response = await fetch(`${API_BASE_URL}/places/search?q=${encodedQuery}`, {
@@ -285,6 +284,38 @@ export const searchPlaces = async (query) => {
     return await response.json();
   } catch (error) {
     console.error("Erreur searchPlaces:", error);
+    return [];
+  }
+};
+
+// Récupérer MES listes (pour le Passeport)
+export const fetchUserLists = async () => {
+  try {
+    const token = await getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/lists`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error("Erreur fetch lists");
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Erreur fetchUserLists:", error);
+    return [];
+  }
+};
+
+// Récupérer le CONTENU d'une liste spécifique
+export const fetchListDetails = async (listId) => {
+  try {
+    const token = await getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/lists/${listId}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error("Erreur fetch list details");
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Erreur fetchListDetails:", error);
     return [];
   }
 };
