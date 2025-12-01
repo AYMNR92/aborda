@@ -19,7 +19,7 @@ async function searchPlaces(query) {
       },
       headers: {
         // ⚠️ Mettez votre vrai email ici, sinon OSM bloque après quelques essais
-        'User-Agent': 'AbordaApp/1.0 (votre-email@gmail.com)' 
+        'User-Agent': 'AbordaApp/1.0 (aymene.naoura@gmail.com)' 
       }
     });
 

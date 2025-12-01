@@ -152,6 +152,9 @@ export const PassportScreen = () => {
             </View>
           </View>
         </View>
+        <TouchableOpacity style={styles.addUser} onPress={() => navigation.navigate('AddFriend')}>
+          <Ionicons name="person-add-outline" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* --- ZONE DE STATS (Celle connectée au Backend) --- */}
@@ -263,6 +266,7 @@ const styles = StyleSheet.create({
   idInfo: { justifyContent: 'center' },
   idLabel: { color: '#94A3B8', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
   idName: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginBottom: 5 },
+  addUser: {justifyContent: 'center', alignItems: 'center', marginLeft:80},
   badgeRow: { flexDirection: 'row', marginTop: 5 },
   rankBadge: { backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   rankText: { color: '#000', fontSize: 10, fontWeight: 'bold' },

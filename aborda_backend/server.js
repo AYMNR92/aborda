@@ -19,6 +19,7 @@ const { createTrip, getAllTrips, deleteTrip } = require('./api/services/tripServ
 const { toggleLike, toggleBookmark } = require('./api/services/interactionService');
 const { searchPlaces } = require('./api/services/placesService');
 const { createList, getUserLists, addItemToList, getListDetails } = require('./api/services/listService');
+const { searchUsers, sendFriendRequest, getMyFriends } = require('./api/services/socialService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -226,6 +227,40 @@ app.get('/api/lists/:id', requireAuth, async (req, res) => {
     try {
         const items = await getListDetails(req.params.id);
         res.json(items);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// RECHERCHE D'UTILISATEURS
+app.get('/api/users/search', requireAuth, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) return res.json([]);
+
+        const users = await searchUsers(q, req.user.id);
+        res.json(users);
+    } catch (e) {
+        console.error("Erreur search users:", e.message);
+        res.status(500).json({ error: "Erreur recherche" });
+    }
+});
+
+// DEMANDE D'AMI
+app.post('/api/friends/request', requireAuth, async (req, res) => {
+    try {
+        const { targetUserId } = req.body;
+        const result = await sendFriendRequest(req.user.id, targetUserId);
+        res.json(result);
+    } catch (e) {
+        console.error("Erreur friend request:", e.message);
+        res.status(500).json({ error: "Erreur demande ami" });
+    }
+});
+
+// MES AMIS (Pour la liste de partage)
+app.get('/api/friends', requireAuth, async (req, res) => {
+    try {
+        const friends = await getMyFriends(req.user.id);
+        res.json(friends);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

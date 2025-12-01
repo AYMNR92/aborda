@@ -319,3 +319,40 @@ export const fetchListDetails = async (listId) => {
     return [];
   }
 };
+
+export const searchUsers = async (query) => {
+  try {
+    const token = await getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/users/search?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur searchUsers:", error);
+    return [];
+  }
+};
+
+// Ajouter un ami
+export const addFriend = async (targetUserId) => {
+  try {
+    const token = await getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/friends/request`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ targetUserId })
+    });
+    
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Erreur");
+    return data;
+  } catch (error) {
+    console.error("Erreur addFriend:", error);
+    throw error;
+  }
+};

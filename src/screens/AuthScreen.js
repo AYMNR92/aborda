@@ -3,6 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, Te
 import { supabase } from '../lib/supabase';
 
 export const AuthScreen = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,10 +14,23 @@ export const AuthScreen = () => {
     let error;
 
     if (isLogin) {
+      // Login inchangé
       const res = await supabase.auth.signInWithPassword({ email, password });
       error = res.error;
     } else {
-      const res = await supabase.auth.signUp({ email, password });
+      // INSCRIPTION : ON PASSE LE PSEUDO EN METADATA
+      if (!username) { Alert.alert("Oups", "Pseudo obligatoire !"); setLoading(false); return; }
+      
+      const res = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+            data: {
+                username: username, // 👈 C'est ça la clé !
+                // full_name: "..." (si tu veux l'ajouter aussi)
+            }
+        }
+      });
       error = res.error;
     }
 
@@ -36,6 +50,17 @@ export const AuthScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>{isLogin ? 'Connexion' : 'Inscription'}</Text>
       
+      {!isLogin && (
+        <TextInput 
+          style={styles.input} 
+          placeholder="Pseudo (@voyageur)" 
+          placeholderTextColor="#94A3B8"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+      )}
+
       <TextInput 
         style={styles.input} 
         placeholder="Email" 

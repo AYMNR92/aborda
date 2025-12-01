@@ -12,6 +12,7 @@ import './src/utils/polyfills.js';
 import { CustomTabBar } from './src/components/CustomTabBar.js';
 
 // Écrans
+import { AddFriendScreen } from './src/screens/AddFriendScreen';
 import { AuthScreen } from './src/screens/AuthScreen.js';
 import { CreateTripScreen } from './src/screens/CreateTripScreen.js';
 import { ExploreScreen } from './src/screens/ExploreScreen.js';
@@ -268,6 +269,7 @@ function AppContent() {
           />
           <Stack.Screen name="TripDetails" component={TripDetailsScreen} />
           <Stack.Screen name="ListDetails" component={ListDetailsScreen} />
+          <Stack.Screen name="AddFriend" component={AddFriendScreen} options={{ presentation: 'modal' }} />
         </>
       ) : (
         <Stack.Screen name="Auth" component={AuthScreen} />
